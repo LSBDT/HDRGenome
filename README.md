@@ -6,18 +6,11 @@
 
 ## Member
   - Takeya Kasukawa <takeya.kasukawa@riken.jp>
-  - Akira Hasegawa <akira.hasegawa@riken.jp>
+  - Akira Hasegawa <akira.hasegawa@riken.jp>	
   - Atsuko Imai <atsuko_imai_hp@yahoo.co.jp>
   - Atsushi Kondo <atsushi.kondo@riken.jp>
   - Akihiro Nakaya <nakaya@edu.k.u-tokyo.ac.jp>
   - Yasushi Okazaki <ya-okazaki@juntendo.ac.jp>
-
-## Request
-  - ゲノムの変異のデータ(いわゆるVCFファイル)を複数入力して、HDR (Hamming Distance Ratio)を計算するツール（他にいくつか入力やパラメータがあります）
-  - これを全ゲノムデータに拡張したい
-  - ツールは現在は Java Scala を使っている。ただし、今のツールを拡張してもいいし、新たに別の言語で作り直してもいい
-  - できれば Mac 等のローカルコンピューターで実行できるようにしてほしい（VCFファイルが個人識別符号に該当するので、サーバーにアップロードが必要な仕組みは難しい）
-  - プロトタイプが３か月後ぐらいにできるといい
 
 ## Structure
 ```
@@ -26,6 +19,7 @@ hdrgenome/
 ├── bin/
 │   ├── findrun.pl - Uses table from vcftable.pl to compute HDR
 │   ├── hdr.pl - Uses table from vcftable.pl to compute HDR
+│   ├── statdel - Mac version of stadel (binary)
 │   ├── vcftable.pl - Merge multiple VCF files into one table
 ├── README - this README website
 └── testdata - Test data used in test case
@@ -39,31 +33,6 @@ hdrgenome/
   - Own Cloud: https://genomec.gsc.riken.jp/gerg/owncloud/index.php/s/oanbE95OdimomfW
   - Europe PMC: https://europepmc.org/article/med/28722338
   - Nature: https://www.ncbi.nlm.nih.gov/pubmed/26143870
-## JAR File
-### Command
-  - To run original jar file:
-```
-java -jar bin/hdr2fx_20161201.jar
-```
-  - This will create a window.
-  - Follow instruction written in HDRプログラム実行方法20200416.pdf.
-### Parameter
-  - load case VCF (NA18939_v2.vcf)
-  - load control VCF (NA18940_v2.vcf, NA18941_v2.vcf, NA18942_v2.vcf)
-  - load position TSV (CHR_POS_NA18939_v2.txt)
-  - select case (1)
-  - select position (1)
-  - window size
-     - start (10)
-     - stop (50)
-     - interval (10)
-  - AR mode:
-     - AR hom vs non-hom (1/1 vs 1/0, 0/0) (default)
-     - DD het vs non-het (1/0 vs 1/1,0/0)
-     - ADD all vs all (1/1 vs 1/0 vs 0/0)
-  - indel mode:
-     - indel included (default)
-     - indel excluded
 ## Script
 ### vcftable.pl
 ```
