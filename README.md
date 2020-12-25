@@ -15,19 +15,24 @@
 ## Structure
 ```
 hdrgenome/
-├── bash.sh - bash script for running HDR in docker image
 ├── bin/
 │   ├── findrun.pl - Uses table from vcftable.pl to compute HDR
 │   ├── hdr.pl - Uses table from vcftable.pl to compute HDR
+│   ├── moirai2.pl - workflow script
+│   ├── rdf.pl - pipeline script
 │   ├── statdel - Mac version of stadel (binary)
+│   ├── statdel.pl - A wrapper script to run statdel
 │   ├── vcftable.pl - Merge multiple VCF files into one table
 ├── README - this README website
+├── run.sh - Pipeline
 └── testdata - Test data used in test case
     ├── case/ -  sample VCF files of case
     ├── ctrl/ -  sample VCF files of control
-    └── position/
-        ├── CHR_POS_NA18939_v2.txt - position TSV used by test case
-        └── Region_NA18939_v2.txt - region TSV used by test case
+    ├── hdr/ -  cxample of hdr output
+    ├── position/
+    │   ├── CHR_POS_NA18939_v2.txt - position TSV used by test case
+    │   └── Region_NA18939_v2.txt - region TSV used by test case
+    └── statdel/ - example of statdel output
 ```
 ## URL
   - Own Cloud: https://genomec.gsc.riken.jp/gerg/owncloud/index.php/s/oanbE95OdimomfW
@@ -253,3 +258,65 @@ chr1	1333598	10	1	0.000	0.333	0.333	0.333	0.333	0.667
 | 61 | |
 | 62 | |
 | 63 | |
+
+### pipeline
+- "run.sh" is a pipeline which does following processes:
+  - vcftable.pl
+  - findrun.pl
+  - hdr.pl
+  - statdel.pl
+#### command
+- Place vcf|bcf|avinput under a directory (for example, input/ directory)
+```
+hdrgenome/
+└──input/
+    ├── PatientA.avinput
+    ├── PatientB.avinput
+    └── PatientC.avinput
+```
+- Under hdrgenome root directory, start pipline with the following command line.
+```
+bash run.sh [PROJECT_NAME]
+```
+- A directory with specified PROJECT_NAME will be created.
+- All the results will be stored under the project directory.
+#### parameters
+```
+$ bash run.sh
+[hdr] target mode {AR|AD|DD} [default=AR]?  DD
+[vcftable] Path to input directory [default=input]?  
+[vcftable] QV threshold for low quality [default=50]?  
+[findrun] include indel {T|F} [default=F]? 
+[findrun] stretch mode {hom|het} [default=hom]? 
+[findrun] pickup number [default=1]? 
+[findrun] region size [default=1000000]? 
+[findrun] skip count [default=0]? 
+```
+- Parameters needed by the pipeline will be entered through prompt questions.
+- If you want to change the parameter, type in and then hit return.
+- If it's OK with the default value, just hit return.
+- Currently {T|F} is not working...
+- Currently AR|AD mode is not working...
+#### database
+```
+hdrgenome/
+└── moirai/
+    ├── ctrl/ - Used by moirai2 to control command processes
+    ├── db/ - database of the pipeline in (triple format)
+    └── log/ - log of command processes are are kept here
+```
+- You can edit the file under db directly through text editor.
+- Database are in triple format (subject->predicate->object).
+- Predicate is a filename of a text.
+- Subject and object are defined in the text and separted by a tab.
+```
+$ cat moirai/db/stretchMode.txt
+hdr hom
+```
+- This is a triple of "hdr->stretchMode->hom" ('hdr' is a root of a triple tree).
+- By changing hom to het, the tiple becomes "hdr->stretchMode->het".
+- If vcftable is already created, you can skip the vcftable.pl process by placing a "vcftable.txt" table under moirai/db/ directory.
+```
+$ cat moirai/db/stretchMode.txt
+hdr	hdr/vcftable.txt
+```
