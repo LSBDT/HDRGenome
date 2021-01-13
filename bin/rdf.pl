@@ -20,8 +20,6 @@ use vars qw($opt_d $opt_f $opt_g $opt_G $opt_h $opt_q $opt_r);
 getopts('d:f:g:G:hqr:');
 ############################## URLs ##############################
 my $urls={};
-$urls->{"daemon"}="https://moirai2.github.io/schema/daemon";
-$urls->{"daemon/bash"}="https://moirai2.github.io/schema/daemon/bash";
 $urls->{"daemon/command"}="https://moirai2.github.io/schema/daemon/command";
 $urls->{"daemon/execute"}="https://moirai2.github.io/schema/daemon/execute";
 $urls->{"daemon/timeended"}="https://moirai2.github.io/schema/daemon/timeended";
@@ -76,7 +74,8 @@ sub help_import{
 	print "   NOTE:  '%' is wildcard for subject/predicate/object.\n";
 	print "   NOTE:  Need to specify database for most manipulations.\n";
 	print "\n";
-	print "UPDATED: 2020/11/27  Shift system to a database directory structure\n";
+	print "UPDATED: 2021/01/07  Predicate of query can have variable\n";
+	print "         2020/11/27  Shift system to a database directory structure\n";
 	print "\n";
 }
 ############################## MAIN ##############################
@@ -281,15 +280,19 @@ sub commandImport{
 	while(<STDIN>){
 		chomp;
 		my ($s,$p,$o)=split(/\t/);
+		if(!defined($p)){next;}
+		if(!defined($o)){next;}
 		if(!exists($writers->{$p})&&!exists($excess->{$p})){
 			my $file=getFileFromPredicate($p);
 			if($file=~/\.gz$/){$writers->{$p}=undef;}
 			elsif($file=~/\.bz2$/){$writers->{$p}=undef;}
 			elsif(keys(%{$writers})<$limit-2){
 				my ($writer,$tempfile)=tempfile(UNLINK=>1);
-				my $reader=openFile($file);
-				while(<$reader>){chomp;print $writer "$_\n";}
-				close($reader);
+				if(-e $file){
+					my $reader=openFile($file);
+					while(<$reader>){chomp;print $writer "$_\n";}
+					close($reader);
+				}else{mkdirs(dirname($file));}
 				$writers->{$p}=$writer;
 				$files->{$file}=$tempfile;
 			}else{
@@ -311,9 +314,11 @@ sub commandImport{
 		if($file=~/\.gz$/){next;}
 		elsif($file=~/\.bz2$/){next;}
 		my ($writer,$tempfile)=tempfile(UNLINK=>1);
-		my $reader=openFile($file);
-		while(<$reader>){chomp;print $writer "$_\n";}
-		close($reader);
+		if(-e $file){
+			my $reader=openFile($file);
+			while(<$reader>){chomp;print $writer "$_\n";}
+			close($reader);
+		}else{mkdirs(dirname($file));}
 		foreach my $line(@{$array}){print $writer "$line\n";$total++;}
 		close($writer);
 		$files->{$file}=$tempfile;
@@ -1030,7 +1035,6 @@ sub loadLogToHash{
 sub loadDbToArray{
 	my $directory=shift();	
 	my ($nodes,$edges)=toNodesAndEdges($directory);
-	printTable($nodes,$edges);
 	my @queries=();
 	foreach my $from(keys(%{$edges})){
 		my $labelFrom="\$".$nodes->{$from};
@@ -1274,20 +1278,32 @@ sub queryVariables{
 	my $subject=shift();
 	my $predicate=shift();
 	my $object=shift();
-	my $sub=".*";
-	my $pre=".*";
-	my $obj=".*";
-	my $subVar=1;
-	my $preVar=1;
-	my $objVar=1;
-	if($subject=~/^\$(.+)$/){$subject=$1}
-	else{$sub=$subject;$subVar=0;}
-	if($predicate=~/^\$(.+)$/){$predicate=$1}
-	else{$pre=$predicate;$preVar=0;}
-	if($object=~/^\$(.+)$/){$object=$1}
-	else{$obj=$object;$objVar=0;}
+	my @subVars=();
+	my @preVars=();
+	my @objVars=();
+	if($subject=~/\$(\w+)/){
+		while($subject=~/\$(\w+)/){
+			push(@subVars,$1);
+			$subject=~s/\$(\w+)/(.+)/;
+		}
+		$subject="$subject";
+	}
+	if($predicate=~/\$(\w+)/){
+		while($predicate=~/\$(\w+)/){
+			push(@preVars,$1);
+			$predicate=~s/\$(\w+)/(.+)/;
+		}
+		$predicate="$predicate";
+	}
+	if($object=~/\$(\w+)/){
+		while($object=~/\$(\w+)/){
+			push(@objVars,$1);
+			$object=~s/\$(\w+)/(.+)/;
+		}
+		$object="$object";
+	}
 	my @files=listFiles(undef,undef,-1,$dbDir);
-	my @files=narrowDownByPredicate($pre,@files);
+	my @files=narrowDownByPredicate($predicate,@files);
 	my @array=();
 	foreach my $file(@files){
 		my $p=getPredicateFromFile($file);
@@ -1295,12 +1311,21 @@ sub queryVariables{
 		while(<$reader>){
 			chomp;
 			my ($s,$o)=split(/\t/);
-			if($s!~/^$sub$/){next;}
-			if($o!~/^$obj$/){next;}
+			if($s!~/^$subject$/){next;}
+			if($o!~/^$object$/){next;}
 			my $h={};
-			if($subVar){$h->{$subject}=$s;}
-			if($preVar){$h->{$predicate}=$p;}
-			if($objVar){$h->{$object}=$o;}
+			if(scalar(@subVars)>0){
+				my @results=$s=~/^$subject$/;
+				for(my $i=0;$i<scalar(@subVars);$i++){$h->{$subVars[$i]}=$results[$i];}
+			}
+			if(scalar(@preVars)>0){
+				my @results=$p=~/^$predicate$/;
+				for(my $i=0;$i<scalar(@preVars);$i++){$h->{$preVars[$i]}=$results[$i];}
+			}
+			if(scalar(@objVars)>0){
+				my @results=$o=~/^$object$/;
+				for(my $i=0;$i<scalar(@objVars);$i++){$h->{$objVars[$i]}=$results[$i];}
+			}
 			if(scalar(keys(%{$h}))>0){push(@array,$h);}
 		}
 		close($reader);

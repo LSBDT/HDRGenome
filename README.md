@@ -280,30 +280,48 @@ bash run.sh [PROJECT_NAME]
 ```
 - A directory with specified PROJECT_NAME will be created.
 - All the results will be stored under the project directory.
+
 #### parameters
-```
-$ bash run.sh
-[hdr] target mode {AR|AD|DD} [default=AR]?  DD
-[vcftable] Path to input directory [default=input]?  
-[vcftable] QV threshold for low quality [default=50]?  
-[findrun] include indel {T|F} [default=F]? 
-[findrun] stretch mode {hom|het} [default=hom]? 
-[findrun] pickup number [default=1]? 
-[findrun] region size [default=1000000]? 
-[findrun] skip count [default=0]? 
-```
+- At the start of a workflow, parameters will be set through prmpts.
 - Parameters needed by the pipeline will be entered through prompt questions.
 - If you want to change the parameter, type in and then hit return.
 - If it's OK with the default value, just hit return.
-- Currently {T|F} is not working...
-- Currently AR|AD mode is not working...
+```
+$ bash run.sh
+[hdr] target mode {AR|AD|DD} [default=AR]?
+[vcftable] Path to input directory [default=input]?
+[vcftable] QV threshold for low quality [default=50]?
+[hdr] Exclude indel {T|F} [default=F]?T
+[hdr] exclude low quality [default=F]?T
+```
+
+- Following question will be asked for the DD mode:
+```
+[findrun] include indel {T|F} [default=F]?
+[findrun] stretch mode {hom|het} [default=hom]?
+[findrun] pickup number [default=1]?
+[findrun] region size [default=1000000]?
+[findrun] skip count [default=0]?
+```
+
+- Following question will be asked for the AR/AD mode:
+```
+[hdr] interval [default=10]?
+[hdr] start distance [default=10]?50
+[hdr] end distance [default=50]?100
+```
+
 #### database
+- Database are stored in triple (subject->predicate->object)
 ```
 hdrgenome/
 └── moirai/
     ├── ctrl/ - Used by moirai2 to control command processes
     ├── db/ - database of the pipeline in (triple format)
     └── log/ - log of command processes are are kept here
+        ├── YYYYMMDD/ - processing/completed Logs will be stored here
+        ├── error/ - error logs will be stored here
+        └── json/ - json files describing commands will be stored here
 ```
 - You can edit the file under db directly through text editor.
 - Database are in triple format (subject->predicate->object).
