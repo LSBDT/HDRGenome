@@ -2,6 +2,7 @@
 use strict 'vars';
 use Cwd;
 use File::Basename;
+use File::Which;
 use File::Temp qw/tempfile tempdir/;
 use FileHandle;
 use Getopt::Std;
@@ -80,6 +81,8 @@ sub help_import{
 }
 ############################## MAIN ##############################
 if(defined($opt_h)||scalar(@ARGV)==0){help();exit();}
+my $command=shift(@ARGV);
+if($command eq"test"){test();}
 my $moiraiDir=(defined($opt_d))?$opt_d:"moirai";
 my $dbDir="$moiraiDir/db";
 my $logDir="$moiraiDir/log";
@@ -88,7 +91,8 @@ mkdir($moiraiDir);chmod(0777,$moiraiDir);
 mkdir($dbDir);chmod(0777,$dbDir);
 mkdir($logDir);chmod(0777,$logDir);
 mkdir($errorDir);chmod(0777,$errorDir);
-my $command=shift(@ARGV);
+my $md5cmd=which('md5sum');
+if(!defined($md5cmd)){$md5cmd=which('md5');}
 if($command eq"appendlog"){commandAppendLog(@ARGV);}
 elsif($command eq"commands"){commandCommands(@ARGV);}
 elsif($command eq"delete"){commandDelete(@ARGV);}
@@ -107,7 +111,6 @@ elsif($command eq"select"){commandSelect(@ARGV);}
 elsif($command eq"seqcount"){commandSeqcount(@ARGV);}
 elsif($command eq"submit"){commandSubmit(@ARGV);}
 elsif($command eq"update"){commandUpdate(@ARGV);}
-elsif($command eq"test"){test();}
 ############################## commandExport ##############################
 sub commandExport{
 	my $target=shift();
@@ -671,16 +674,12 @@ sub fileStats{
 			print $writer "$file\tfile/seqcount\t$seqcount\n";
 		}
 		#md5
-		my $sum;
-		my $md5=`which md5`;
-		chomp($md5);
-		my $md5sum=`which md5sum`;
-		chomp($md5sum);
-		if($md5sum ne ""){$sum=`$md5sum<$file`}
-		elsif($md5 ne ""){$sum=`$md5<$file`}
-		chomp($sum);
-		if($sum=~/^(\w+)/){$sum=$1;}
-		print $writer "$file\tfile/md5\t$sum\n";
+		if(defined($md5cmd)){
+			my $sum=`$md5cmd<$file`;
+			chomp($sum);
+			if($sum=~/^(\w+)/){$sum=$1;}
+			print $writer "$file\tfile/md5\t$sum\n";
+		}
 		#filesize
 		my $filesize=-s $file;
 		print $writer "$file\tfile/filesize\t$filesize\n";
@@ -1131,19 +1130,10 @@ sub md5Files{
 	my $fileungrep=shift(@files);
 	my $recursivesearch=shift(@files);
 	foreach my $file(listFiles($filegrep,$fileungrep,$recursivesearch,@files)){
-		my $md5=`which md5`;
-		my $md5sum=`which md5sum`;
-		if(defined($md5)){
-			chomp($md5);
-			my $sum=`$md5 $file`;
+		if(defined($md5cmd)){
+			my $sum=`$md5cmd $file`;
 			chomp($sum);
 			if($sum=~/(\S+)$/){$sum=$1;}
-			print $writer "$file\tfile/md5\t$sum\n";
-		}elsif(defined($md5sum)){
-			chomp($md5sum);
-			my $sum=`$md5sum $file`;
-			chomp($sum);
-			if($sum=~/^(\S+)/){$sum=$1;}
 			print $writer "$file\tfile/md5\t$sum\n";
 		}
 	}
@@ -1553,5 +1543,7 @@ sub test{
 	unlink("test/update.json");
 	unlink("test/import.txt");
 	rmdir("test/db");
+	rmdir("test/log/error");
+	rmdir("test/log");
 	rmdir("test");
 }

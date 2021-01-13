@@ -1,11 +1,11 @@
 #!/bin/sh
-projectName=$1
 if [ $# -ne 1 ]; then
 echo "run.sh [PROJECTNAME]"
 exit
 fi
 
 # project
+projectName=$1
 perl bin/moirai2.pl -o "root->project->$projectName" insert
 
 # mode

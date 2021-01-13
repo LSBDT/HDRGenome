@@ -3,6 +3,7 @@ use strict 'vars';
 use Cwd;
 use File::Basename;
 use File::Temp;
+use File::Which;
 use FileHandle;
 use Getopt::Std;
 use DBI;
@@ -447,6 +448,8 @@ mkdir("$ctrldir/submit");chmod(0777,"$ctrldir/submit");
 mkdir("$ctrldir/error");chmod(0777,"$ctrldir/error");
 if($ARGV[0] eq "check"){shift(@ARGV);check(@ARGV);exit(0);}
 if($ARGV[0] eq "ls"){shift(@ARGV);ls(@ARGV);exit(0);}
+my $md5cmd=which('md5sum');
+if(!defined($md5cmd)){$md5cmd=which('md5');}
 #just in case jobs are completed while moirai2.pl was not running by termination
 my $executes={};
 controlProcess($executes);
@@ -1287,7 +1290,7 @@ sub fileStats{
 	foreach my $key(keys(%{$matches})){
 		my @stats=stat($path);
 		if($key eq "filesize"){$hash->{$key}=$stats[7];}
-		elsif($key eq "md5"){my $md5cmd=(`which md5`)?"md5":"md5sum";my $md5=`$md5cmd<$path`;chomp($md5);$hash->{$key}=$md5;}
+		elsif($key eq "md5"&&defined($md5cmd)){my $md5=`$md5cmd<$path`;chomp($md5);$hash->{$key}=$md5;}
 		elsif($key eq "timestamp"){$hash->{$key}=$stats[9];}
 		elsif($key eq "owner"){$hash->{$key}=getpwuid($stats[4]);}
 		elsif($key eq "group"){$hash->{$key}=getgrgid($stats[5]);}
@@ -1632,20 +1635,44 @@ sub createJson{
 	print $writer "}";
 	close($writer);
 	if($file=~/^\.\/(.+)$/){$file=$1;}
-	my $md5cmd=(`which md5`)?"md5":"md5sum";
-	my $md5=`$md5cmd<$file`;chomp($md5);
 	my $json;
-	foreach my $tmp(listFiles("json",$jsondir)){
-		my $m=`$md5cmd<$tmp`;chomp($m);
-		if($m eq $md5){$json=$tmp;}
+	if(defined($md5cmd)){
+		my $md5=`$md5cmd<$file`;chomp($md5);
+		foreach my $tmp(listFiles("json",$jsondir)){
+			my $md=`$md5cmd<$tmp`;chomp($md);
+			if($md eq $md5){$json=$tmp;}
+		}
+	}else{
+		my $sizeA=-s $file;
+		foreach my $tmp(listFiles("json",$jsondir)){
+			my $sizeB=-s $tmp;
+			if($sizeA!=$sizeB){next;}
+			if(compareFiles($sizeA,$sizeB)){$json=$sizeB;last;}
+		}
 	}
-	if(defined($json)){unlink($file);}
-	else{
+	if(defined($json)){
+		unlink($file);
+	}else{
 		$json="$jsondir/j".getDatetime().".json";
 		while(-e $json){sleep(1);$json="$jsondir/j".getDatetime().".json";}
 		system("mv $file $json");
 	}
 	return $json;
+}
+############################## existsArray ##############################
+sub compareFiles{
+	my $fileA=shift();
+	my $fileB=shift();
+	open(INA,$fileA);
+	open(INB,$fileB);
+	while(!eof(INA)){
+		my $lineA=<INA>;
+		my $lineB=<INB>;
+		if($fileA ne $fileB){return;}
+	}
+	close(INB);
+	close(INA);
+	return 1;
 }
 ############################## existsArray ##############################
 sub existsArray{
@@ -1872,8 +1899,8 @@ sub setupInputOutput{
 	}
 	foreach my $key(@{$inputKeys}){if($key=~/^\$\w+$/){$inputs->{$key}=1;}else{$inputs->{"\$$key"}=1;}}
 	foreach my $key(@{$outputKeys}){if($key=~/^\$\w+$/){$outputs->{$key}=1;}else{$outputs->{"\$$key"}=1;}}
-	my @ins=keys(%{$inputs});
-	my @outs=keys(%{$outputs});
+	my @ins=sort{$a cmp $b}keys(%{$inputs});
+	my @outs=sort{$a cmp $b}keys(%{$outputs});
 	return (\@ins,\@outs);
 }
 ############################## handleInputOutput ##############################

@@ -280,6 +280,7 @@ bash run.sh [PROJECT_NAME]
 ```
 - A directory with specified PROJECT_NAME will be created.
 - All the results will be stored under the project directory.
+- Multiple projects can be created under a work directory.
 
 #### parameters
 - At the start of a workflow, parameters will be set through prmpts.

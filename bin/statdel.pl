@@ -39,7 +39,8 @@ foreach my $input(@inputs){
 	my $tmpOutput=prepareOutput();
 	my $output="$outdir/".basename($input,".txt").".out";
 	my $param=prepareParam($tmpInput,$tmpOutput);
-	system("$prgdir/statdel $param");
+	
+	system("$prgdir/mac/statdel $param");
 	handleOutput($tmpOutput,$output);
 }
 ############################## handleOutput ##############################
