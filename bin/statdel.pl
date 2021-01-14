@@ -34,13 +34,16 @@ my @inputs=@ARGV;
 my $outdir=(defined($opt_o))?$opt_o:"out";
 mkdir($outdir);
 @inputs=listFiles(".txt",@inputs);
+my $os="linux";
+my $result=`uname`;
+if($result=~/Darwin/){$os="mac";}
 foreach my $input(@inputs){
 	my $tmpInput=prepareInput($input);
 	my $tmpOutput=prepareOutput();
 	my $output="$outdir/".basename($input,".txt").".out";
 	my $param=prepareParam($tmpInput,$tmpOutput);
-	
-	system("$prgdir/mac/statdel $param");
+	if($os eq "mac"){system("$prgdir/mac/statdel $param");}
+	else{system("$prgdir/linux/statdel $param");}
 	handleOutput($tmpOutput,$output);
 }
 ############################## handleOutput ##############################

@@ -6,7 +6,6 @@ use File::Temp;
 use File::Which;
 use FileHandle;
 use Getopt::Std;
-use DBI;
 use LWP::UserAgent;
 use HTTP::Request;
 use Time::Local;

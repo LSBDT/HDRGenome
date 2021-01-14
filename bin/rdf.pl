@@ -6,7 +6,6 @@ use File::Which;
 use File::Temp qw/tempfile tempdir/;
 use FileHandle;
 use Getopt::Std;
-use DBI;
 use File::Path;
 use LWP::UserAgent;
 use HTTP::Request::Common;
