@@ -109,24 +109,24 @@ sub prepareInput{
 	while(<IN>){
 		chomp;
 		my @token=split(/\t/);
-		if($token[0]=~/^chr\d+$/){}
-		elsif($token[0]=~/^chrX$/){$token[0]="chr23";$replaces->{"chrX"}="chr23";}
-		elsif($token[0]=~/^chrY$/){$token[0]="chr24";$replaces->{"chrY"}="chr24";}
-		elsif($token[0]=~/^chrM$/){$token[0]="chr25";$replaces->{"chrM"}="chr25";}
-		else{next;}
+		if($token[0]=~/^chr\d+$/){}#chr1 chr2 chr3 ... chr22
+		elsif($token[0]=~/^chrX$/){$token[0]="chr23";$replaces->{"chrX"}="chr23";}#chrX
+		elsif($token[0]=~/^chrY$/){$token[0]="chr24";$replaces->{"chrY"}="chr24";}#chrY
+		elsif($token[0]=~/^chrM$/){$token[0]="chr25";$replaces->{"chrM"}="chr25";}#chrM
+		else{next;}#chrX_random_XXXXX
 		push(@lines,\@token);
 	}
 	close(IN);
-	if($type ne "dd"){
+	if($type eq "dd"){
+		my $totalsize=scalar(@lines)/2;
+		print $writer "$totalsize $ctrlsize 1";
+		print $writer "\n";
+	}else{
 		my $hash={};
 		foreach my $token(@lines){$hash->{$token->[2]}++;}
 		my $diffsize=scalar(keys(%{$hash}));
 		my $totalsize=scalar(@lines)/$diffsize/2;
-		print $writer "$totalsize $ctrlsize $diffsize";
-		print $writer "\n";
-	}else{
-		my $totalsize=scalar(@lines)/2;
-		print $writer "$totalsize $ctrlsize 1";
+		print $writer ($totalsize*$diffsize)." $ctrlsize $diffsize";
 		print $writer "\n";
 	}
 	print $writer "$label\n";
@@ -138,7 +138,7 @@ sub prepareInput{
 sub prepareParam{
 	my $input=shift();
 	my $output=shift();
-	my ($writer,$tmp)=tempfile(UNLINK=>1);
+	my ($writer,$tmp)=tempfile();#UNLINK=>1
 	print $writer "Statdel: Pt369 with known pathogenic deletions\n";
 	print $writer "-9 17 14005439 15217437  17p12  code for missing, chrom, start and end bp position of dis.del, 0 0 0 if unknown\n";
 	print $writer "-12 1 1      code for test statistic, exponent, include obs\n";

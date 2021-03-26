@@ -73,6 +73,7 @@ sub help{
 	print "              html  Create a HTML representation of RDF database\n";
 	print "                ls  Create triples from directories/files and show or store them in RDF database\n";
 	print "            prompt  Prompt value from user if necessary\n";
+	print "            config  Load config setting to the database\n";
 	print "              test  For development purpose (test commands)\n";
 	print "\n";
 	print "############################## Default Usage ##############################\n";
@@ -157,6 +158,7 @@ sub help{
 	if(defined($opt_H)){
 		print "############################## Updates ##############################\n";
 		print "\n";
+		print "2021/03/25  Added config mode\n";
 		print "2021/01/08  Added stdout/stderr error handlers with options.\n";
 		print "2021/01/04  Added 'boolean options' to enable options without values.\n";
 		print "2020/12/17  'filestats' command added to check values.\n";
@@ -200,6 +202,13 @@ sub help{
 		print "\n";
 	}
 	exit(0);
+}
+sub help_config{
+	print "\n";
+	print "############################## HELP ##############################\n";
+	print "\n";
+	print "Usage: perl $program_name [Options] config FILE";
+	print "\n";
 }
 sub help_prompt{
 	print "\n";
@@ -402,6 +411,7 @@ if(defined($opt_h)&&scalar(@ARGV)>0&&$ARGV[0]eq"extract"){help_extract();exit(0)
 if(defined($opt_h)&&scalar(@ARGV)>0&&$ARGV[0]eq"html"){help_html();exit(0);}
 if(defined($opt_h)&&scalar(@ARGV)>0&&$ARGV[0]eq"ls"){help_ls();exit(0);}
 if(defined($opt_h)&&scalar(@ARGV)>0&&$ARGV[0]eq"prompt"){help_prompt();exit(0);}
+if(defined($opt_h)&&scalar(@ARGV)>0&&$ARGV[0]eq"config"){help_config();exit(0);}
 if(defined($opt_h)||defined($opt_H)||scalar(@ARGV)==0){help();}
 my $moiraidir=(defined($opt_d))?$opt_d:"moirai";
 if($moiraidir=~/^(.+)\/$/){$moiraidir=$1;}
@@ -426,6 +436,7 @@ if($ARGV[0] eq "daemon"){shift(@ARGV);daemon(@ARGV);exit(0);}
 if($ARGV[0] eq "extract"){shift(@ARGV);extract(@ARGV);exit(0);}
 if($ARGV[0] eq "html"){shift(@ARGV);html(@ARGV);exit(0);}
 if($ARGV[0] eq "prompt"){shift(@ARGV);prompt(@ARGV);exit(0);}
+if($ARGV[0] eq "config"){shift(@ARGV);config(@ARGV);exit(0);}
 if($ARGV[0] eq "test"){shift(@ARGV);test();exit(0);}
 mkdir($moiraidir);chmod(0777,$moiraidir);
 mkdir($dbdir);chmod(0777,$dbdir);
@@ -557,6 +568,35 @@ sub checkEval{
 		}
 	}
 	return @lines;
+}
+############################## config ##############################
+sub config{
+	my @files=@_;
+	my $hash={};
+	my @lines=();
+	foreach my $file(@files){
+		open(IN,$file);
+		while(<IN>){
+			chomp;s/\r//g;
+			if(/^#/){next;}
+			my ($key,$val)=split(/\t+/,$_);
+			my @tokens=split(/\-\>/,$key);
+			if(scalar(@tokens)>1){
+				my $line=$tokens[0]."\t".$tokens[1]."\t$val";
+				while(my($k,$v)=each(%{$hash})){$line=~s/$k/$v/g;}
+				push(@lines,$line);
+			}else{
+				if($key!~/^\$/){$key="\$$key";}
+				if($key=~/^\$/){$key="\\$key";}
+				$hash->{$key}=$val;
+			}
+		}
+		close(IN);
+	}
+	my ($writer,$temp)=tempfile(UNLINK=>1);
+	foreach my $line(@lines){print $writer "$line\n";}
+	close($writer);
+	system("perl $prgdir/rdf.pl -q -f tsv -d $moiraidir update < $temp");
 }
 ############################## check ##############################
 sub check{

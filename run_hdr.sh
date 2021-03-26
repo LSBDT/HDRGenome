@@ -1,44 +1,46 @@
 #!/bin/sh
 if [ $# -ne 1 ]; then
-echo "run.sh [PROJECTNAME]"
+echo "run.sh [SETTING]"
 exit
 fi
 
+bin/moirai2.pl config $1
+
 # project
-projectName=$1
-perl bin/moirai2.pl -o "root->project->$projectName" insert
+#projectName=$1
+#perl bin/moirai2.pl -o "root->project->$projectName" insert
 
 # mode
-perl bin/moirai2.pl -o '$project->targetMode->$answer' prompt "\$project=$projectName" '[$project] target mode {AR|AD|DD} [default=AR]?'
+#perl bin/moirai2.pl -o '$project->targetMode->$answer' prompt "\$project=$projectName" '[$project] target mode {AR|AD|DD} [default=AR]?'
 
 # vcftable
-perl bin/moirai2.pl -o '$project->indir->$answer' prompt "\$project=$projectName" '[vcftable] Path to input directory [default=testdata/input]?'
-perl bin/moirai2.pl -o '$project->qvThreshold->$answer' prompt "\$project=$projectName" '[vcftable] QV threshold for low quality [default=50]?'
+#perl bin/moirai2.pl -o '$project->indir->$answer' prompt "\$project=$projectName" '[vcftable] Path to input directory [default=testdata/input]?'
+#perl bin/moirai2.pl -o '$project->qvThreshold->$answer' prompt "\$project=$projectName" '[vcftable] QV threshold for low quality [default=50]?'
 
 # DD findrun
-perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->noIndel->$answer' prompt "\$project=$projectName" '[findrun] Exclude indel {T|F} [default=F]?'
-perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->stretchMode->$answer' prompt "\$project=$projectName" '[findrun] stretch mode {hom|het} [default=hom]?'
-perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->pickupNumber->$answer' prompt "\$project=$projectName" '[findrun] pickup number [default=1]?'
-perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->regionSize->$answer' prompt "\$project=$projectName" '[findrun] region size [default=1000000]?'
-perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->skipCount->$answer' prompt "\$project=$projectName" '[findrun] skip count [default=0]?'
+#perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->noIndel->$answer' prompt "\$project=$projectName" '[findrun] Exclude indel {T|F} [default=F]?'
+#perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->stretchMode->$answer' prompt "\$project=$projectName" '[findrun] stretch mode {hom|het} [default=hom]?'
+#perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->pickupNumber->$answer' prompt "\$project=$projectName" '[findrun] pickup number [default=1]?'
+#perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->regionSize->$answer' prompt "\$project=$projectName" '[findrun] region size [default=1000000]?'
+#perl bin/moirai2.pl -i '$project->targetMode->DD' -o '$project->skipCount->$answer' prompt "\$project=$projectName" '[findrun] skip count [default=0]?'
 
 # position file
-perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->positiondir->$answer' prompt "\$project=$projectName" '[position] Path to position files [default=testdata/position/]?'
-perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->positiondir->$answer' prompt "\$project=$projectName" '[position] Path to position files [default=testdata/position/]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->positiondir->$answer' prompt "\$project=$projectName" '[position] Path to position files [default=testdata/position/]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->positiondir->$answer' prompt "\$project=$projectName" '[position] Path to position files [default=testdata/position/]?'
 
 # hdr
-perl bin/moirai2.pl -o '$project->excludeIndel->$answer' prompt "\$project=$projectName" '[hdr] Exclude indel {T|F} [default=F]?'
-perl bin/moirai2.pl -o '$project->excludeLowQuality->$answer' prompt "\$project=$projectName" '[hdr] exclude low quality {T|F} [default=F]?'
+#perl bin/moirai2.pl -o '$project->excludeIndel->$answer' prompt "\$project=$projectName" '[hdr] Exclude indel {T|F} [default=F]?'
+#perl bin/moirai2.pl -o '$project->excludeLowQuality->$answer' prompt "\$project=$projectName" '[hdr] exclude low quality {T|F} [default=F]?'
 
 # AR hdr
-perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->interval->$answer' prompt "\$project=$projectName" '[hdr] interval [default=10]?'
-perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->startDistance->$answer' prompt "\$project=$projectName" '[hdr] start distance [default=10]?'
-perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->endDistance->$answer' prompt "\$project=$projectName" '[hdr] end distance [default=50]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->interval->$answer' prompt "\$project=$projectName" '[hdr] interval [default=10]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->startDistance->$answer' prompt "\$project=$projectName" '[hdr] start distance [default=10]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AR' -o '$project->endDistance->$answer' prompt "\$project=$projectName" '[hdr] end distance [default=50]?'
 
 # AD hdr
-perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->interval->$answer' prompt "\$project=$projectName" '[hdr] interval [default=10]?'
-perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->startDistance->$answer' prompt "\$project=$projectName" '[hdr] start distance [default=10]?'
-perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->endDistance->$answer' prompt "\$project=$projectName" '[hdr] end distance [default=50]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->interval->$answer' prompt "\$project=$projectName" '[hdr] interval [default=10]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->startDistance->$answer' prompt "\$project=$projectName" '[hdr] start distance [default=10]?'
+#perl bin/moirai2.pl -i '$project->targetMode->AD' -o '$project->endDistance->$answer' prompt "\$project=$projectName" '[hdr] end distance [default=50]?'
 
 echo "# Creating project directory..."
 perl bin/moirai2.pl -i 'root->project->$project' -o '$project->flag/dircreated->T' command << 'EOF'

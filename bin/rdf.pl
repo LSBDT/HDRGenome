@@ -584,19 +584,36 @@ sub updateJson{
 	my $total=0;
 	my @predicates=getPredicatesFromJson($json);
 	foreach my $predicate(@predicates){
+		my $hash={};
+		foreach my $s(keys(%{$json})){
+			if(!exists($json->{$s}->{$predicate})){next;}
+			my $o=$json->{$s}->{$predicate};
+			if(ref($o)eq"ARRAY"){$hash->{$s}=$o;}
+			else{$hash->{$s}=[$o];}
+		}
 		my $updated=0;
 		my $count=0;
 		my $file=getFileFromPredicate($predicate);
 		if($file=~/\.gz$/){next;}
 		elsif($file=~/\.bz2$/){next;}
-		if(!-e $file){next;}
 		my $reader=openFile($file);
 		my ($writer,$tempfile)=tempfile();
 		while(<$reader>){
 			chomp;
 			my ($s,$o)=split(/\t/);
-			if(exists($json->{$s})&&exists($json->{$s}->{$predicate})){print $writer "$s\t".$json->{$s}->{$predicate}."\n";$updated++;$count++;}
-			else{print $writer "$s\t$o\n";$count++;}
+			if(exists($hash->{$s})){
+				foreach my $o(@{$hash->{$s}}){print $writer "$s\t$o\n";}
+				delete($hash->{$s});
+				$updated++;
+			}else{print $writer "$s\t$o\n";}
+			$count++;
+		}
+		foreach my $s(keys(%{$hash})){
+			if(!exists($hash->{$s})){next;}
+			foreach my $o(@{$hash->{$s}}){
+				print $writer "$s\t$o\n";
+				$updated++;$count++;
+			}
 		}
 		close($writer);
 		close($reader);

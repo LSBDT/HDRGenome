@@ -1,0 +1,23 @@
+#project
+$project	test
+$project->targetMode	AR
+root->project	$project
+#VCF table
+$project->indir		testdata/input
+$project->qvThreshold	50
+$project->noIndel	F
+$project->noIndel	F
+#$project->vcftable	testdata/vcftable.txt
+#HDR
+$project->excludeIndel	F
+$project->excludeLowQuality	F
+#DD mode
+$project->stretchMode	hom
+$project->pickupNumber	1
+$project->regionSize	1000000
+$project->skipCount	0
+#AR|AD mode
+$project->positiondir	testdata/position
+$project->interval	10
+$project->startDistance	10
+$project->endDistance	50
