@@ -18,8 +18,8 @@ sub help{
 	print "\n";
 	print "############################## HELP ##############################\n";
 	print "\n";
-	print "Program: statdel wrapper program.\n";
-	print "Version: 2020/12/10\n";
+	print "Program: statdel and maxstatRS wrapper program.\n";
+	print "Version: 2021/04/15\n";
 	print "Author: Akira Hasegawa (akira.hasegawa\@riken.jp)\n";
 	print "\n";
 	print "Usage: perl statdel.pl -o OUTDIR INPUT\n";
@@ -31,19 +31,18 @@ sub help{
 ############################## MAIN ##############################
 if(defined($opt_h)||scalar(@ARGV)<1){help();exit(1);}
 my @inputs=@ARGV;
+my @regionSizes=();#for AR/D mode,
 my $outdir=(defined($opt_o))?$opt_o:"out";
 mkdir($outdir);
 @inputs=listFiles(".txt",@inputs);
-my $os="linux";
 my $result=`uname`;
-if($result=~/Darwin/){$os="mac";}
+my $os=($result=~/Darwin/)?"mac":"linux";
 foreach my $input(@inputs){
-	my $tmpInput=prepareInput($input);
+	my ($tmpInput,$program)=prepareInput($input);
 	my $tmpOutput=prepareOutput();
 	my $output="$outdir/".basename($input,".txt").".out";
-	my $param=prepareParam($tmpInput,$tmpOutput);
-	if($os eq "mac"){system("$prgdir/mac/statdel $param");}
-	else{system("$prgdir/linux/statdel $param");}
+	my $param=($program eq "statdel")?prepareParamStatdel($tmpInput,$tmpOutput):prepareParamMaxstatRS($tmpInput,$tmpOutput);
+	system("$prgdir/$os/$program $param");
 	handleOutput($tmpOutput,$output);
 }
 ############################## handleOutput ##############################
@@ -103,7 +102,7 @@ sub prepareInput{
 	my @labels=split(/\t/,$label);
 	my $ctrlsize=0;
 	foreach my $l(@labels){if($l=~/^Case/){$ctrlsize++;}}
-	my $type=($labels[1]eq"Position")?"ar":"dd";
+	my $program=($labels[1]eq"Position")?"maxstatRS":"statdel";
 	my @lines=();
 	my $replaces={};
 	while(<IN>){
@@ -117,32 +116,53 @@ sub prepareInput{
 		push(@lines,\@token);
 	}
 	close(IN);
-	if($type eq "dd"){
+	if($program eq "statdel"){
 		my $totalsize=scalar(@lines)/2;
-		print $writer "$totalsize $ctrlsize 1";
+		my $diffsize=1;
+		print $writer "$totalsize $ctrlsize $diffsize";
 		print $writer "\n";
 	}else{
 		my $hash={};
 		foreach my $token(@lines){$hash->{$token->[2]}++;}
+		@regionSizes=sort keys(%{$hash});
 		my $diffsize=scalar(keys(%{$hash}));
 		my $totalsize=scalar(@lines)/$diffsize/2;
-		print $writer ($totalsize*$diffsize)." $ctrlsize $diffsize";
+		my $casesize=1;
+		print $writer "$totalsize $casesize $ctrlsize $diffsize";
 		print $writer "\n";
 	}
 	print $writer "$label\n";
 	foreach my $token(@lines){print $writer join("\t",@{$token})."\n";}
 	close($writer);
-	return $tmp;
+	return ($tmp,$program);
 }
-############################## prepareParam ##############################
-sub prepareParam{
+############################## prepareParamMaxstatRS ##############################
+sub prepareParamMaxstatRS{
 	my $input=shift();
 	my $output=shift();
 	my ($writer,$tmp)=tempfile();#UNLINK=>1
-	print $writer "Statdel: Pt369 with known pathogenic deletions\n";
-	print $writer "-9 17 14005439 15217437  17p12  code for missing, chrom, start and end bp position of dis.del, 0 0 0 if unknown\n";
-	print $writer "-12 1 1      code for test statistic, exponent, include obs\n";
-	print $writer "1 3 0.5 0.8  no. of \"n\" values, min bp HDR, min median(HDR), min. overlap\n";
+	print $writer "Statdel: Auto generated parameter file\n";
+	print $writer "-9 0 0 0\n";
+	print $writer "-12 1 1\n";
+	my $line="";
+	my $min=$regionSizes[0];
+	my $max=$regionSizes[scalar(@regionSizes)-1];
+	print $writer "$min $max 3.0\n";
+	print $writer "$input\n";
+	print $writer "$output\n";
+	foreach my $regionSize(@regionSizes){print $writer "$regionSize\n";}
+	close($writer);
+	return $tmp;
+}
+############################## prepareParamStatdel ##############################
+sub prepareParamStatdel{
+	my $input=shift();
+	my $output=shift();
+	my ($writer,$tmp)=tempfile();#UNLINK=>1
+	print $writer "Statdel: Auto generated parameter file\n";
+	print $writer "-9 0 0 0\n";
+	print $writer "-12 1 1\n";
+	print $writer "1 3 0.5 0.8\n";
 	print $writer "$input\n";
 	print $writer "$output\n";
 	close($writer);

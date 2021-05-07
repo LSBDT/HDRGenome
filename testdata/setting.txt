@@ -6,7 +6,6 @@ root->project	$project
 $project->indir		testdata/input
 $project->qvThreshold	50
 $project->noIndel	F
-$project->noIndel	F
 #$project->vcftable	testdata/vcftable.txt
 #HDR
 $project->excludeIndel	F

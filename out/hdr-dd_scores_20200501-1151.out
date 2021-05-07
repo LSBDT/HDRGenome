@@ -1,0 +1,35 @@
+Program statdel version 19 Mar 2020
+Copyright (C) 2014-2017 Jurg Ott http://lab.rockefeller.edu/ott/
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version. See the GNU General Public
+License for more details at <http://www.gnu.org/licenses/>.
+
+Statdel: Auto generated parameter file
+P-values include observed data.
+Variant-specific (primary) statistic (ONE-SIDED):
+ t statistic, unequal variances (code = -12)
+Threshold for min. median HDR = 0.5000. 30 Apr 2021 12:25:24h
+
+=== Datafile 1, /var/folders/12/f5vg17pn5c76pg7wccd147kw0000gp/T/EW_Sgne9O2 ===
+Number of candidate/valid ROHs = 6/4. Number of pairs: 3 case-ctrl (Gr.1), 3 others (Gr.2), 6 total
+Of 6 ROHs, 1 have avg#variants < 3.0. Total of 0 missing pairs found
+
+EXPLANATIONS TO TABLE BELOW
+"n" indicates the number of heterozygous variants flanking an ROH, and
+ number of input files holding HDR values
+TestStat=-9.0 indicates no valid test statistic available
+"Line" indicates the line number of the given ROH in the n-th input file
+mH=low means that the median HDR of case-control pairs is less than
+ stated threshold, mH=ok otherwise.
+
+      Mean HDR
+Group_1	Group_2	n1	n2	Teststat	n	p	chr	start_bp	end_bp	mH	rank	Line
+1.0000	0.6513	3	3	5.2539	1	0.2500	chr1	17706297	18023509	ok	1	3
+1.0000	0.8343	3	3	2.5689	1	0.2500	chr1	16342103	17249334	ok	2	2
+1.0000	0.7427	3	3	2.0982	1	0.2500	chr1	25889539	26378211	ok	3	6
+1.0000	0.8667	3	3	1.0000	1	0.3750	chr1	1237538	1337334	ok	4	1
+-9.0000	-9.0000	-9	-9	-9.0000	1	-9.0000	chr1	22183739	22447746	ok	-9	4
+-9.0000	-9.0000	-9	-9	-9.0000	1	-9.0000	chr1	24413118	24495968	ok	-9	5

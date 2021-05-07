@@ -5,12 +5,12 @@
 > High-density oligonucleotide arrays have widely been used to detect pathogenic chromosomal deletions. In addition to high-density oligonucleotide arrays, programs using whole-exome sequencing have become available for estimating copy-number variations using depth of coverage. Here, we propose a new statistical method, HDR-del, to prioritize pathogenic chromosomal deletions based on Hamming distance in exome sequencing. In vcf (variant call format) files generated from exome sequencing, hemizygous chromosomal deletion regions lack heterozygous variants and lead to apparent long runs of homozygosity (ROH). In our Hamming distance ratio (HDR)-del approach, we calculate the "difference" in heterozygous status between an affected individual and control individuals using the HDR over all candidate chromosomal deletion regions defined as ROH longer than 1Mbp. Using a suitable test statistic, which is expected to be large for a true pathogenic deletion region, we prioritize candidate chromosomal deletion regions based on this statistic. In our approach, we were able to considerably narrow down true pathogenic chromosomal deletion regions, which were confirmed by high-density oligonucleotide arrays in four mitochondrial disease patients. Our HDR-del approach represents an easy method for detecting chromosomal deletions.
 
 ## Member
-  - Takeya Kasukawa <takeya.kasukawa@riken.jp>
-  - Akira Hasegawa <akira.hasegawa@riken.jp>	
-  - Atsuko Imai <atsuko_imai_hp@yahoo.co.jp>
-  - Atsushi Kondo <atsushi.kondo@riken.jp>
-  - Akihiro Nakaya <nakaya@edu.k.u-tokyo.ac.jp>
-  - Yasushi Okazaki <ya-okazaki@juntendo.ac.jp>
+- Takeya Kasukawa <takeya.kasukawa@riken.jp>
+- Akira Hasegawa <akira.hasegawa@riken.jp>	
+- Atsuko Imai <atsuko_imai_hp@yahoo.co.jp>
+- Atsushi Kondo <atsushi.kondo@riken.jp>
+- Akihiro Nakaya <nakaya@edu.k.u-tokyo.ac.jp>
+- Yasushi Okazaki <ya-okazaki@juntendo.ac.jp>
 
 ## Structure
 ```
@@ -23,10 +23,13 @@ hdrgenome/
 │   ├── statdel - Mac version of stadel (binary)
 │   ├── statdel.pl - A wrapper script to run statdel
 │   ├── vcftable.pl - Merge multiple VCF files into one table
-├── README - this README website
-├── run.sh - Pipeline
+├── docker.sh - Script to run pipeline with a docker.
+├── hdr.sh - Script to run pipeline.
+├── LINCENCE - LICENCE of this project
+├── README - README of this project
 └── testdata - Test data used in test case
     ├── case/ -  sample VCF files of case
+    ├── config.txt - config file used by a pipeline for test data
     ├── ctrl/ -  sample VCF files of control
     ├── hdr/ -  cxample of hdr output
     ├── position/
@@ -35,18 +38,76 @@ hdrgenome/
     └── statdel/ - example of statdel output
 ```
 ## URL
-  - Own Cloud: https://genomec.gsc.riken.jp/gerg/owncloud/index.php/s/oanbE95OdimomfW
-  - Europe PMC: https://europepmc.org/article/med/28722338
-  - Nature: https://www.ncbi.nlm.nih.gov/pubmed/26143870
-## Script
+- Own Cloud: https://genomec.gsc.riken.jp/gerg/owncloud/index.php/s/oanbE95OdimomfW
+- Europe PMC: https://europepmc.org/article/med/28722338
+- Nature: https://www.ncbi.nlm.nih.gov/pubmed/26143870
+
+## Requirement
+- MaxOS or Linux environment
+- perl (v5 or more)
+- Docker: https://www.docker.com
+
+## Automation Pipeline
+- "run_hdr.sh" is a pipeline which does following processes:
+  - vcftable.pl
+  - findrun.pl
+  - hdr.pl
+  - statdel.pl
+- Place vcf|bcf|avinput under a directory (for example, input/ directory)
+```
+hdrgenome/
+└──input/
+    ├── PatientA.avinput
+    ├── PatientB.avinput
+    └── PatientC.avinput
+```
+- Under hdrgenome root directory, start pipline with the following command line.
+```
+bash run_hdr.sh [CONFIG]
+```
+- A directory with specified PROJECT_NAME will be created.
+- All the results will be stored under the project directory.
+- Multiple projects can be created under a work directory.
+
+### Config File
+- Line starting with '#' is a comment line.
+- Config lines are separated by a tab.
+```
+#project
+$project	test
+$project->targetMode	AR
+root->project	$project
+#VCF table
+$project->indir		testdata/input
+$project->qvThreshold	50
+$project->noIndel	F
+#$project->vcftable	testdata/vcftable.txt
+#HDR
+$project->excludeIndel	F
+$project->excludeLowQuality	F
+#DD mode
+$project->stretchMode	hom
+$project->pickupNumber	1
+$project->regionSize	1000000
+$project->skipCount	0
+#AR|AD mode
+$project->positiondir	testdata/position
+$project->interval	10
+$project->startDistance	10
+$project->endDistance	50
+```
+
+## Scripts
+- Here are instructions on how to use each scripts.
+
 ### vcftable.pl
 ```
 Command: vcftable.pl [option] VCF [VCF2 ..]
 Arguments:
    VCF  variant call format directory/files
 Options:
-    -o  Output file (default='STDOUT')
-    -t  Quality value threshold (default='40')
+  -o  Output file (default='STDOUT')
+  -t  Quality value threshold (default='40')
 Note:
     If you are using BCF files, please install bcftools
     http://samtools.github.io/bcftools/bcftools.html
@@ -59,6 +120,7 @@ Flag:
     16  multi allelic (column5.count(',')>=2)
     32  low quality (column6<QV40)
 ```
+
 ### hdr.pl
 ```
 Command: hdr.pl [OPTIONS] CASE CTRL POS
@@ -67,12 +129,12 @@ Arguments:
   CTRL  Control files/directory
    POS  Position/region file
 Options:
-    -d  Indel included/excluded (default='included')
-    -e  end distance (default=50)
-    -i  Interval (default=10)
-    -o  outdir (default="out")
-    -s  start distance (default=10)
-    -t  Target mode (default='AR')
+  -d  Indel included/excluded (default='included')
+  -e  end distance (default=50)
+  -i  Interval (default=10)
+  -o  outdir (default="out")
+  -s  start distance (default=10)
+  -t  Target mode (default='AR')
 Mode:
     AR  hom vs non-hom (1/1 vs 1/0,0/0) both HOM=0
     DD  het vs non-het (1/0 vs 1/1,0/0) both HET=0
@@ -81,7 +143,42 @@ Note:
     If you are using BCF files, please install bcftools
     http://samtools.github.io/bcftools/bcftools.html
 ```
-### example
+
+### statdel.pl
+- statdel and maxstatRS needs config files which specify parameters and input/output files.
+- statdel.pl is a wrapper script which creates parameters automatically.
+  - Removes all non normal chromosomes (random chromosomes are removed)
+  - Convert chromosome notation to maxstatRS and statdel programs.
+    - chrX => chr23
+    - chrY => chr24
+    - chrM => chr25
+  - These notation changes will be fixed back to normal notation after statdel/maxstatRS steps by the script.
+  - statdel config generated by script looks like this:
+```
+Statdel: Auto generated parameter file
+-9 0 0 0
+-12 1 1
+1 3 0.5 0.8
+$input
+$output
+
+```
+  - maxstatRS config generated by script looks like this:
+```
+Statdel: Auto generated parameter file
+-9 0 0 0
+-12 1 1
+$MIN $MAX 3.0
+$input
+$output
+$REGION1
+$REGION2
+$REGION3
+$REGION4
+$REGION5
+```
+
+## Example
 - To create a table from multiple VCF files.
 - You can specify directory with VCF files for argument too.
 ```
@@ -181,7 +278,8 @@ chr1	1330726	10	1	0.000	0.500	0.000	0.500	0.000	0.500
 chr1	1333598	10	1	0.000	0.333	0.333	0.333	0.333	0.667
 ```
 
-### flag
+## flag
+- Output from vcftable.pl
 | flag | description |
 ----|----
 | 0 | wild |
@@ -259,60 +357,7 @@ chr1	1333598	10	1	0.000	0.333	0.333	0.333	0.333	0.667
 | 62 | |
 | 63 | |
 
-### pipeline
-- "run.sh" is a pipeline which does following processes:
-  - vcftable.pl
-  - findrun.pl
-  - hdr.pl
-  - statdel.pl
-#### command
-- Place vcf|bcf|avinput under a directory (for example, input/ directory)
-```
-hdrgenome/
-└──input/
-    ├── PatientA.avinput
-    ├── PatientB.avinput
-    └── PatientC.avinput
-```
-- Under hdrgenome root directory, start pipline with the following command line.
-```
-bash run.sh [PROJECT_NAME]
-```
-- A directory with specified PROJECT_NAME will be created.
-- All the results will be stored under the project directory.
-- Multiple projects can be created under a work directory.
-
-#### parameters
-- At the start of a workflow, parameters will be set through prmpts.
-- Parameters needed by the pipeline will be entered through prompt questions.
-- If you want to change the parameter, type in and then hit return.
-- If it's OK with the default value, just hit return.
-```
-$ bash run.sh
-[hdr] target mode {AR|AD|DD} [default=AR]?
-[vcftable] Path to input directory [default=input]?
-[vcftable] QV threshold for low quality [default=50]?
-[hdr] Exclude indel {T|F} [default=F]?T
-[hdr] exclude low quality [default=F]?T
-```
-
-- Following question will be asked for the DD mode:
-```
-[findrun] include indel {T|F} [default=F]?
-[findrun] stretch mode {hom|het} [default=hom]?
-[findrun] pickup number [default=1]?
-[findrun] region size [default=1000000]?
-[findrun] skip count [default=0]?
-```
-
-- Following question will be asked for the AR/AD mode:
-```
-[hdr] interval [default=10]?
-[hdr] start distance [default=10]?50
-[hdr] end distance [default=50]?100
-```
-
-#### database
+### database
 - Database are stored in triple (subject->predicate->object)
 ```
 hdrgenome/
@@ -338,4 +383,47 @@ hdr hom
 ```
 $ cat moirai/db/stretchMode.txt
 hdr	hdr/vcftable.txt
+```
+
+## Compiling Pascal Scripts
+- statdel and maxstatRS are written in Pascal and there is a need to compile them.
+- We prepared compiled statdel and maxstatRS and stored them at bin/max and bin/linux directories.
+- If you want to compile by yourself, here are the steps:
+
+### mac
+- To compile with Mac, use free pascal compiler
+- Mac:https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.0/
+```
+cd maxstatRS/
+fpc maxstatRS.pas
+cd statdel/
+fpc statdel.pas
+```
+
+#### compile error
+- This is a note on what I did.
+- When I was compiling with fpc, error occured:
+```
+Free Pascal Compiler version 3.2.0 [2020/05/31] for x86_64
+Copyright (c) 1993-2020 by Florian Klaempfl and others
+Target OS: Darwin for x86_64
+Compiling maxstatRS.pas
+errtrap.p(3,13) Error: Duplicate identifier "exitsave"
+maxstatRS.pas(1245) Fatal: There were 1 errors compiling module, stopping
+Fatal: Compilation aborted
+Error: /usr/local/bin/ppcx64 returned an error exitcode
+```
+- In statdel.pas, this line is not declared, so I removed.
+```
+var exitsave:pointer;
+```
+
+### linux
+- Compiling with free pascal docker image.
+- https://github.com/Docker-Hub-frolvlad/docker-alpine-fpc
+```
+cd maxstatRS/
+docker run --rm -v `pwd`:/tmp frolvlad/alpine-fpc fpc /tmp/maxstatRS.pas
+cd statdel/
+docker run --rm -v `pwd`:/tmp frolvlad/alpine-fpc fpc /tmp/statdel.pas
 ```

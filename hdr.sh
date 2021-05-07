@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ $# -ne 1 ]; then
-echo "run.sh [SETTING]"
+echo "run.sh [CONFIG]"
 exit
 fi
 
@@ -81,10 +81,16 @@ outdir=$project/hdr
 perl bin/hdr.pl $excludeIndel $excludeLowQuality -t $targetMode -s $startDistance -e $endDistance -i $interval -o $outdir $table $input $control $position
 output=`ls $outdir/$case/*`
 EOF
-
 echo "# Calculating statdel..."
-perl bin/moirai2.pl -i '$case->$project/hdr->$hdr' -o '$case->$project/statdel->$output' -O "Results in file" command << 'EOF'
-outdir=$project/statdel
+#DD
+perl bin/moirai2.pl -i '$project->targetMode->DD,$project->case->$case,$case->$project/hdr->$hdr' -o '$case->$project/stats->$output' -O "Results in file" command << 'EOF'
+outdir=$project/stats
 perl bin/statdel.pl -o $outdir $hdr
+output=`ls $outdir/$case*`
+EOF
+#AR/AD
+perl bin/moirai2.pl -i '$project->targetMode->$targetMode,$project->case->$case,$case->$project/hdr->$hdr' -o '$case->$project/stats->$output' -O "Results in file" command << 'EOF'
+outdir=$project/stats
+perl bin/statdel.pl -m -o $outdir $hdr
 output=`ls $outdir/$case*`
 EOF
