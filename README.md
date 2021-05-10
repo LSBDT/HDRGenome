@@ -68,6 +68,10 @@ bash run_hdr.sh [CONFIG]
 - A directory with specified PROJECT_NAME will be created.
 - All the results will be stored under the project directory.
 - Multiple projects can be created under a work directory.
+- To run test sample:
+```
+bash run_hdr.sh testdata/config.txt
+```
 
 ### Config File
 - Line starting with '#' is a comment line.

@@ -1,6 +1,6 @@
 #project
 $project	test
-$project->targetMode	AR
+$project->targetMode	DD
 root->project	$project
 #VCF table
 $project->indir		testdata/input

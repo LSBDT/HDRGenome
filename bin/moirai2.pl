@@ -58,7 +58,7 @@ sub help{
 	print "############################## HELP ##############################\n";
 	print "\n";
 	print "Program: Handles MOIRAI2 command using RDF database.\n";
-	print "Version: 2021/01/04\n";
+	print "Version: 2021/03/25\n";
 	print "Author: Akira Hasegawa (akira.hasegawa\@riken.jp)\n";
 	print "\n";
 	print "Usage: perl $program_name [Options] COMMAND\n";
@@ -158,6 +158,7 @@ sub help{
 	if(defined($opt_H)){
 		print "############################## Updates ##############################\n";
 		print "\n";
+		print "2021/05/09  Config mode can take in arguments\n";
 		print "2021/03/25  Added config mode\n";
 		print "2021/01/08  Added stdout/stderr error handlers with options.\n";
 		print "2021/01/04  Added 'boolean options' to enable options without values.\n";
@@ -207,7 +208,10 @@ sub help_config{
 	print "\n";
 	print "############################## HELP ##############################\n";
 	print "\n";
-	print "Usage: perl $program_name [Options] config FILE";
+	print "Usage: perl $program_name [Options] config FILE ARG1 ARG2 ARG3";
+	print "\n";
+	print "       FILE  config file written in this \"sub->pre obj\" format:.\n";
+	print "        ARG  Arguments passed to config in '\$1','\$2','\$3' format just like bash.\n";
 	print "\n";
 }
 sub help_prompt{
@@ -571,28 +575,52 @@ sub checkEval{
 }
 ############################## config ##############################
 sub config{
-	my @files=@_;
+	my @args=@_;
+	my $file=shift(@args);
 	my $hash={};
 	my @lines=();
-	foreach my $file(@files){
-		open(IN,$file);
-		while(<IN>){
-			chomp;s/\r//g;
-			if(/^#/){next;}
-			my ($key,$val)=split(/\t+/,$_);
-			my @tokens=split(/\-\>/,$key);
-			if(scalar(@tokens)>1){
-				my $line=$tokens[0]."\t".$tokens[1]."\t$val";
-				while(my($k,$v)=each(%{$hash})){$line=~s/$k/$v/g;}
-				push(@lines,$line);
-			}else{
-				if($key!~/^\$/){$key="\$$key";}
-				if($key=~/^\$/){$key="\\$key";}
-				$hash->{$key}=$val;
-			}
-		}
-		close(IN);
+	open(IN,$file);
+	my $numbers={};
+	my $linecount=0;
+	while(<IN>){
+		chomp;s/\r//g;
+		$linecount++;
+		if(/^#/){next;}
+		if(/\$(\d+)/){$numbers->{$1}=$_;}
 	}
+	my @keys=sort{$a<=>$b}keys(%{$numbers});
+	my $nargs=$keys[scalar(@keys)-1];
+	close(IN);
+	if(scalar(@args)<$nargs){
+		print "\n";
+		print "ERROR: Numbers of arguments doesn't match\n";
+		print ">$file\n";
+		for(my $i=0;$i<scalar(@keys);$i++){print $numbers->{$keys[$i]}."\n";}
+		print "\n";
+		print "perl moirai2.pl config CONFIG";
+		for(my $i=0;$i<$nargs;$i++){print " ARG".($i+1);}
+		print "\n";
+		print "\n";
+	}
+	for(my $i=0;$i<scalar(@args);$i++){$hash->{"\$".($i+1)}=$args[$i];}
+	open(IN,$file);
+	while(<IN>){
+		chomp;s/\r//g;
+		if(/^#/){next;}
+		my ($key,$val)=split(/\t+/,$_);
+		my @tokens=split(/\-\>/,$key);
+		if(scalar(@tokens)>1){
+			my $line=$tokens[0]."\t".$tokens[1]."\t$val";
+			while(my($k,$v)=each(%{$hash})){$line=~s/$k/$v/g;}
+			push(@lines,$line);
+		}else{
+			if($key!~/^\$/){$key="\$$key";}
+			if($key=~/^\$/){$key="\\$key";}
+			if(exists($hash->{$val})){$hash->{$key}=$hash->{$val};}
+			else{$hash->{$key}=$val;}
+		}
+	}
+	close(IN);
 	my ($writer,$temp)=tempfile(UNLINK=>1);
 	foreach my $line(@lines){print $writer "$line\n";}
 	close($writer);
