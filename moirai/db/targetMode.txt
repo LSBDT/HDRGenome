@@ -1,4 +1,0 @@
-testAD	AD
-testAD2	AD
-testAR	AR
-testDD	DD

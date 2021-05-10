@@ -142,7 +142,7 @@ sub prepareParamMaxstatRS{
 	my $input=shift();
 	my $output=shift();
 	my ($writer,$tmp)=tempfile();#UNLINK=>1
-	print $writer "Statdel: Auto generated parameter file\n";
+	print $writer "maxstatRS: Auto generated parameter file\n";
 	print $writer "-9 0 0 0\n";
 	print $writer "-12 1 1\n";
 	my $line="";

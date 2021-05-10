@@ -1,1 +1,0 @@
-{"https://moirai2.github.io/schema/daemon/bash":["outdir=$project/stats","perl bin/statdel.pl -m -o $outdir $hdr","output=`ls $outdir/$case*`"],"https://moirai2.github.io/schema/daemon/input":["$case","$hdr","$project","$targetMode"],"https://moirai2.github.io/schema/daemon/output":["$output"],"https://moirai2.github.io/schema/daemon/error/stdout/ignore":["Results in file"]}

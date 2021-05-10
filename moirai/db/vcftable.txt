@@ -1,4 +1,0 @@
-testAD	testAD/vcftable.txt
-testAD2	testAD/vcftable.txt
-testAR	testAR/vcftable.txt
-testDD	testDD/vcftable.txt

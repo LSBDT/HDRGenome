@@ -1,4 +1,0 @@
-NA18939_v2	/Users/ah3q/Sites/github/HDRGenome/testdata/position/NA18939_v2.txt
-NA18940_v2	/Users/ah3q/Sites/github/HDRGenome/testdata/position/NA18940_v2.txt
-NA18941_v2	/Users/ah3q/Sites/github/HDRGenome/testdata/position/NA18941_v2.txt
-NA18942_v2	/Users/ah3q/Sites/github/HDRGenome/testdata/position/NA18942_v2.txt

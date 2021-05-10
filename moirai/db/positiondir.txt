@@ -1,3 +1,0 @@
-testAD	testdata/position
-testAD2	testdata/position
-testAR	testdata/position

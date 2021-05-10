@@ -1,4 +1,0 @@
-NA18939_v2	testAR/stats/NA18939_v2_ar_10_50_10.out
-NA18940_v2	testAR/stats/NA18940_v2_ar_10_50_10.out
-NA18941_v2	testAR/stats/NA18941_v2_ar_10_50_10.out
-NA18942_v2	testAR/stats/NA18942_v2_ar_10_50_10.out

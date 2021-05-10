@@ -1,1 +1,0 @@
-{"https://moirai2.github.io/schema/daemon/bash":["output=$tmpdir/vcftable.txt","perl bin/vcftable.pl -t $qvThreshold -o $output $directory/*"],"https://moirai2.github.io/schema/daemon/input":["$directory","$output","$project","$qvThreshold"],"https://moirai2.github.io/schema/daemon/output":["$output"]}
