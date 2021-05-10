@@ -1,0 +1,17 @@
+#project
+$project	testDD
+$project->targetMode	DD
+root->project	$project
+#VCF table
+$project->indir		testdata/input
+$project->qvThreshold	50
+$project->noIndel	F
+#$project->vcftable	testdata/vcftable.txt
+#HDR
+$project->excludeIndel	F
+$project->excludeLowQuality	F
+#DD mode
+$project->stretchMode	hom
+$project->pickupNumber	1
+$project->regionSize	1000000
+$project->skipCount	0

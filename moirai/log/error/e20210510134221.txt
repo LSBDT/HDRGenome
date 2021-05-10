@@ -1,0 +1,67 @@
+/Users/ah3q/Sites/github/HDRGenome/moirai/log/json/j20210510133957.json#case	NA18942_v2
+/Users/ah3q/Sites/github/HDRGenome/moirai/log/json/j20210510133957.json#hdr	testAD/hdr/NA18942_v2/NA18942_v2_ad_10_50_10.txt
+/Users/ah3q/Sites/github/HDRGenome/moirai/log/json/j20210510133957.json#output	testAD/stats/NA18942_v2_ad_10_50_10.out
+/Users/ah3q/Sites/github/HDRGenome/moirai/log/json/j20210510133957.json#project	testAD
+/Users/ah3q/Sites/github/HDRGenome/moirai/log/json/j20210510133957.json#targetMode	AD
+https://moirai2.github.io/schema/daemon/command	/Users/ah3q/Sites/github/HDRGenome/moirai/log/json/j20210510133957.json
+https://moirai2.github.io/schema/daemon/command/line	outdir=$project/stats;perl bin/statdel.pl -m -o $outdir $hdr;output=`ls $outdir/$case*`
+https://moirai2.github.io/schema/daemon/execute	error
+https://moirai2.github.io/schema/daemon/timeended	1620621743
+https://moirai2.github.io/schema/daemon/timestarted	1620621743
+https://moirai2.github.io/schema/daemon/timethrown	1620621742
+======================================== stderr ========================================
+Unknown option: m
+/Users/ah3q/Sites/github/HDRGenome/bin/mac/maxstatRS /var/folders/12/f5vg17pn5c76pg7wccd147kw0000gp/T/we0LdX_pGE
+======================================== bash ========================================
+#!/bin/sh
+########## system ##########
+cmdurl="/Users/ah3q/Sites/github/HDRGenome/moirai/log/json/j20210510133957.json"
+execid="e20210510134221"
+rootdir="/Users/ah3q/Sites/github/HDRGenome"
+ctrldir="moirai/ctrl"
+workdir="moirai/e20210510134221"
+tmpdir="moirai/e20210510134221/tmp"
+completedfile="e20210510134221.completed"
+insertfile="e20210510134221.insert"
+logfile="e20210510134221.log"
+stdoutfile="e20210510134221.stdout"
+stderrfile="e20210510134221.stderr"
+cd $rootdir
+########## variables ##########
+case="NA18942_v2"
+hdr="testAD/hdr/NA18942_v2/NA18942_v2_ad_10_50_10.txt"
+project="testAD"
+targetMode="AD"
+########## open tmpdir ##########
+mkdir -p /tmp/$execid
+ln -s /tmp/$execid $rootdir/$workdir/tmp
+########## initialize ##########
+echo "$execid	https://moirai2.github.io/schema/daemon/timestarted	`date +%s`">>$workdir/$logfile
+########## command ##########
+outdir=$project/stats
+perl bin/statdel.pl -m -o $outdir $hdr
+output=`ls $outdir/$case*`
+########## database ##########
+echo "$execid	https://moirai2.github.io/schema/daemon/timeended	`date +%s`">>$workdir/$logfile
+if [[ "$(declare -p output)" =~ "declare -a" ]]; then
+for out in ${output[@]} ; do
+echo "$execid	$cmdurl#output	$out">>$workdir/$logfile
+echo "$case	$project/stats	$out">>$workdir/$insertfile
+done
+else
+echo "$execid	$cmdurl#output	$output">>$workdir/$logfile
+echo "$case	$project/stats	$output">>$workdir/$insertfile
+fi
+########## close tmpdir ##########
+rm $workdir/tmp
+if [ -z "$(ls -A /tmp/$execid)" ]; then
+rmdir /tmp/$execid
+else
+mv /tmp/$execid $workdir/tmp
+fi
+########## check stdout ##########
+if [ "$(grep 'Results in file' $workdir/$stdoutfile)" != "" ]; then
+rm $workdir/$stdoutfile
+fi
+########## completed ##########
+mv $workdir/$completedfile $ctrldir/completed/.

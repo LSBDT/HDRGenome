@@ -1,4 +1,0 @@
-NA18939_v2	test/hdr/NA18939_v2/NA18939_v2_dd.txt
-NA18940_v2	test/hdr/NA18940_v2/NA18940_v2_dd.txt
-NA18941_v2	test/hdr/NA18941_v2/NA18941_v2_dd.txt
-NA18942_v2	test/hdr/NA18942_v2/NA18942_v2_dd.txt

@@ -1,0 +1,17 @@
+#project
+$project	testAD2
+$project->targetMode	AD
+root->project	$project
+#VCF table
+$project->indir		testdata/input
+$project->qvThreshold	50
+$project->noIndel	F
+$project->vcftable	testAD/vcftable.txt
+#HDR
+$project->excludeIndel	F
+$project->excludeLowQuality	F
+#AR mode
+$project->positiondir	testdata/position
+$project->interval	10
+$project->startDistance	10
+$project->endDistance	50

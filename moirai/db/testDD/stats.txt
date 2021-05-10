@@ -1,0 +1,4 @@
+NA18939_v2	testDD/stats/NA18939_v2.hom_region1000000_pick1_skip0_dd.out
+NA18940_v2	testDD/stats/NA18940_v2.hom_region1000000_pick1_skip0_dd.out
+NA18941_v2	testDD/stats/NA18941_v2.hom_region1000000_pick1_skip0_dd.out
+NA18942_v2	testDD/stats/NA18942_v2.hom_region1000000_pick1_skip0_dd.out

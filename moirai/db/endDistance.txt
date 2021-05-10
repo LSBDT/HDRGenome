@@ -1,1 +1,3 @@
-test	50
+testAD	50
+testAD2	50
+testAR	50

@@ -1,0 +1,2 @@
+#Chr	Start	End
+chr1	6579653	7724045

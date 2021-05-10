@@ -42,6 +42,7 @@ foreach my $input(@inputs){
 	my $tmpOutput=prepareOutput();
 	my $output="$outdir/".basename($input,".txt").".out";
 	my $param=($program eq "statdel")?prepareParamStatdel($tmpInput,$tmpOutput):prepareParamMaxstatRS($tmpInput,$tmpOutput);
+	print STDERR "$prgdir/$os/$program $param\n";
 	system("$prgdir/$os/$program $param");
 	handleOutput($tmpOutput,$output);
 }

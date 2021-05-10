@@ -1,0 +1,4 @@
+NA18939_v2	testDD/findrun/NA18939_v2.hom_region1000000_pick1_skip0.txt
+NA18940_v2	testDD/findrun/NA18940_v2.hom_region1000000_pick1_skip0.txt
+NA18941_v2	testDD/findrun/NA18941_v2.hom_region1000000_pick1_skip0.txt
+NA18942_v2	testDD/findrun/NA18942_v2.hom_region1000000_pick1_skip0.txt

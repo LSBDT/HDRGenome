@@ -1,1 +1,4 @@
-test	testdata/input
+testAD	testdata/input
+testAD2	testdata/input
+testAR	testdata/input
+testDD	testdata/input

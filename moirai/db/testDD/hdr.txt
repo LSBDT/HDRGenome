@@ -1,0 +1,4 @@
+NA18939_v2	testDD/hdr/NA18939_v2/NA18939_v2.hom_region1000000_pick1_skip0_dd.txt
+NA18940_v2	testDD/hdr/NA18940_v2/NA18940_v2.hom_region1000000_pick1_skip0_dd.txt
+NA18941_v2	testDD/hdr/NA18941_v2/NA18941_v2.hom_region1000000_pick1_skip0_dd.txt
+NA18942_v2	testDD/hdr/NA18942_v2/NA18942_v2.hom_region1000000_pick1_skip0_dd.txt

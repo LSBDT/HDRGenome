@@ -1,1 +1,3 @@
-test	10
+testAD	10
+testAD2	10
+testAR	10

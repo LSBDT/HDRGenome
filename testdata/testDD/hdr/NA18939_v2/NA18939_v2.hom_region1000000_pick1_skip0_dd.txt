@@ -1,0 +1,2 @@
+0 3 1 # 1:chr1
+#Chr	Start	End	HDR:1/2	Case-Ctrl1	Case-Ctrl2	Case-Ctrl3	Ctrl1-Ctrl2	Ctrl1-Ctrl3	Ctrl2-Ctrl3
