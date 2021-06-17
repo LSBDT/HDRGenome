@@ -19,9 +19,10 @@ echo "# List position directory..."
 perl bin/moirai2.pl -i '$project->positiondir->$input' -o '$basename->$project/position->$path' ls
 
 echo "# Creating VCF table..."
-perl bin/moirai2.pl -i 'root->project->$project,$project->indir->$directory,$project->qvThreshold->$qvThreshold' -o '$project->vcftable->$output' command 'output=$project/vcftable.txt' << 'EOF'
+perl bin/moirai2.pl -i 'root->project->$project,$project->indir->$directory,$project->qvThreshold->$qvThreshold' -o '$project->vcftable->$output,$project->vcfTableLog->$logFile' command 'output=$project/vcftable.txt' << 'EOF'
 output=$tmpdir/vcftable.txt
-perl bin/vcftable.pl -t $qvThreshold -o $output $directory/*
+logFile=$project/log/vcftable.txt
+perl bin/vcftable.pl -t $qvThreshold -o $output $directory/* 2> $logFile
 EOF
 
 echo "# Calculating Findrun..."
@@ -45,11 +46,11 @@ EOF
 #AR/AD
 perl bin/moirai2.pl -b '$excludeIndel:-d,$excludeLowQuality:-l' -i '$project->targetMode->$targetMode,$project->vcftable->$table,$project->case->$case,$case->input->$input,$case->$project/position->$position,$project->indir->$control,$project->interval->$interval,$project->startDistance->$startDistance,$project->endDistance->$endDistance,$project->excludeIndel->$excludeIndel,$project->excludeLowQuality->$excludeLowQuality' -o '$case->$project/hdr->$output,$case->$project/hdrLog->$logFile' command << 'EOF'
 outdir=$project/hdr
-logFile=$project/log/findrun.txt
+logFile=$project/log/hdr.txt
 perl bin/hdr.pl $excludeIndel $excludeLowQuality -t $targetMode -s $startDistance -e $endDistance -i $interval -o $outdir $table $input $control $position 2> $logFile
 output=`ls $outdir/$case/*`
 EOF
-echo "# Calculating statistics..."
+echo "# Calculating statdel/maxStats..."
 #AR/AD/DD
 perl bin/moirai2.pl -i '$project->case->$case,$case->$project/hdr->$hdr' -o '$case->$project/stats->$output,$case->$project/statsLog->$logFile' -O "Results in file" command << 'EOF'
 outdir=$project/stats

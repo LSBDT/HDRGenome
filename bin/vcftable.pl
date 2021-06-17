@@ -338,6 +338,7 @@ sub splitInputs{
   my $splitFiles={};
   my $chrHash={};
   foreach my $inFile(@inFiles){
+    print STDERR "Input file: $inFile\n";
     my $reader;
     my $basename;
     if($inFile=~/^(.+)\.g(ip)?z$/i){$basename=$1;$reader=IO::File->new("gzip -cd $inFile|");}
@@ -361,6 +362,7 @@ sub splitInputs{
       my $tmpfile=$splitFiles->{$chr}->{$basename};
       my ($fh,$tmpfile2)=tempfile(DIR=>$tmpDir,TEMPLATE=>"$basename.$chr.sort.XXXXXX",SUFFIX=>".txt");
       close($fh);
+      print STDERR "Sorting file: $tmpfile2\n";
       system("sort -k2,2n $tmpfile>$tmpfile2");
       unlink($tmpfile);
       $splitFiles->{$chr}->{$basename}=$tmpfile2;

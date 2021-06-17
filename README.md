@@ -29,7 +29,10 @@ hdrgenome/
 ├── README - README of this project
 └── testdata - Test data used in test case
     ├── case/ -  sample VCF files of case
-    ├── config.txt - config file used by a pipeline for test data
+    ├── configAD.txt - config file used by a pipeline for test data
+    ├── configAD2.txt - config file used by a pipeline for test data
+    ├── configAR.txt - config file used by a pipeline for test data
+    ├── configDD.txt - config file used by a pipeline for test data
     ├── ctrl/ -  sample VCF files of control
     ├── hdr/ -  cxample of hdr output
     ├── position/
@@ -75,15 +78,42 @@ bash run_hdr.sh testdata/configAR.txt
 bash run_hdr.sh testdata/configDD.txt
 bash run_hdr.sh testdata/configAD2.txt
 ```
+- Directory will be created with a project name.
+- testdataAD for example will create these directories and files:
+```
+testdataAD/
+├──hdr/  Result from HDR computation
+├──log/
+|   ├── hdr.txt  Log from HDR computation
+|   ├── stats.txt  Log from statdel/maxStats computation
+|   └── vcftable.txt  Log from VCFTable computation
+├──stats/  Result from statdel/maxStats computation
+└──vcftable.txt  Result from VCFTable computation
+```
 - 'configAD2.txt' reuses vcftable from configAD.txt by specifying vcftable information in config file.
 ```
 $project->vcftable	testAD/vcftable.txt
 ```
 - If you don't want to recompute vcftable.txt, adding this line in config file will save time.
 - You can't RERUN the pipeline with the same project name.
+- Moirai directory used for pipeline control and pipeline database.
+- When something goes wrong in the pipeline, check HDRGenome/moirai/log/error directory.
+- HDRGenome/moirai/db directory is used to store pipeline status in triple database.
+```
+HDRGenome/
+└─-moirai/
+    ├──ctrl/  Directory used to control pipeline process.
+    ├──db/  Database of pipeline in triple
+    └──log/  Result from HDR computation
+        ├──check/  Directory to store checking of process.
+        ├──error/  Directory to store error processes.
+        └──json/  Directory to store commands of pipeline information in json
+```
 - If you delete moirai/db/PROJECT directory, you can rerun the pipeline again.
+- If you just want to run specific step again:
+  - Remove moirai/db/PROJECT/vcftable.txt to recompute VCFTable step.
   - Remove moirai/db/PROJECT/hdr.txt to recompute HDR step.
-  - Remove moirai/db/PROJECT/stats.txt to recompute HDR step.
+  - Remove moirai/db/PROJECT/stats.txt to recompute statdel/maxStats step.
 ### Config File
 - Line starting with '#' is a comment line.
 - Config lines are separated by a tab.
