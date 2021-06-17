@@ -19,7 +19,7 @@ sub help{
 	print "############################## HELP ##############################\n";
 	print "\n";
 	print "Program: statdel and maxstatRS wrapper program.\n";
-	print "Version: 2021/04/15\n";
+	print "Version: 2021/06/17\n";
 	print "Author: Akira Hasegawa (akira.hasegawa\@riken.jp)\n";
 	print "\n";
 	print "Usage: perl statdel.pl -o OUTDIR INPUT\n";
@@ -42,7 +42,12 @@ foreach my $input(@inputs){
 	my $tmpOutput=prepareOutput();
 	my $output="$outdir/".basename($input,".txt").".out";
 	my $param=($program eq "statdel")?prepareParamStatdel($tmpInput,$tmpOutput):prepareParamMaxstatRS($tmpInput,$tmpOutput);
-	print STDERR "$prgdir/$os/$program $param\n";
+	print STDERR "Input file: $input\n";
+	print STDERR "Temporary input: $tmpInput\n";
+	print STDERR "Parameter file: $param\n";
+	print STDERR "Temporary output: $tmpOutput\n";
+	print STDERR "Output file: $output\n";
+	print STDERR "Command: $prgdir/$os/$program\n";
 	system("$prgdir/$os/$program $param");
 	handleOutput($tmpOutput,$output);
 }

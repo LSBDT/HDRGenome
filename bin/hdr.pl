@@ -32,7 +32,7 @@ if(defined($opt_h)||scalar(@ARGV)<4){
   print STDERR "    http://samtools.github.io/bcftools/bcftools.html\n";
   print STDERR "\n";
   print STDERR "Author: akira.hasegawa\@riken.jp\n";
-  print STDERR "Update: 2020/06/19\n";
+  print STDERR "Update: 2021/06/17\n";
   exit(1);
 }
 my $tableFile=$ARGV[0];
@@ -40,6 +40,31 @@ my @caseFiles=listFiles("\\.([vb]cf|avinput)\$",$ARGV[1]);
 my @ctrlFiles=listFiles("\\.([vb]cf|avinput)\$",$ARGV[2]);
 @ctrlFiles=removeCaseFromCtrl(\@caseFiles,\@ctrlFiles);
 my @posFiles=listFiles("\\.te?xt\$",$ARGV[3]);
+print STDERR "########## Setting ##########\n";
+if(scalar(@caseFiles)==0){
+  print STDERR "ERROR  Number of case file is 0.";
+  print STDERR "ERROR  Make sure you specify correct case files in the command line.\n";
+  exit(1);
+}else{
+  print STDERR "Case files: ".scalar(@caseFiles)."\n";
+  foreach my $caseFile(@caseFiles){print STDERR "  $caseFile\n";}
+}
+if(scalar(@ctrlFiles)==0){
+  print STDERR "ERROR  Number of control file is 0.";
+  print STDERR "ERROR  Make sure you specify correct control files in the command line.\n";
+  exit(1);
+}else{
+  print STDERR "Contro files: ".scalar(@ctrlFiles)."\n";
+  foreach my $ctrlFile(@ctrlFiles){print STDERR "  $ctrlFile\n";}
+}
+if(scalar(@posFiles)==0){
+  print STDERR "ERROR  Number of position file is 0.";
+  print STDERR "ERROR  Make sure you specify correct position files in the command line.\n";
+  exit(1);
+}else{
+  print STDERR "Position files: ".scalar(@posFiles)."\n";
+  foreach my $posFile(@posFiles){print STDERR "  $posFile\n";}
+}
 my $outdir=(defined($opt_o))?$opt_o:"out";
 my $noindel=$opt_d;
 my $nolowqc=$opt_l;
@@ -48,6 +73,13 @@ my $windowInterval=(defined($opt_i))?$opt_i:10;
 my $windowStart=(defined($opt_s))?$opt_s:10;
 my $windowEnd=(defined($opt_e))?$opt_e:50;
 mkdir($outdir);
+print STDERR "Output directory: $outdir\n";
+print STDERR "No indel: $noindel\n";
+print STDERR "No low quality: $nolowqc\n";
+print STDERR "Target mode: $targetMode\n";
+print STDERR "Window interval: $windowInterval\n";
+print STDERR "Window start: $windowStart\n";
+print STDERR "Window end: $windowEnd\n";
 my ($matchNames,$caseNames,$ctrlNames)=matchFiles(\@caseFiles,\@ctrlFiles);
 for(my $i=0;$i<scalar(@{$caseNames});$i++){
   my $caseName=$caseNames->[$i];
@@ -96,13 +128,16 @@ sub calculateHDR{
   my $windowStart=shift();
   my $windowEnd=shift();
   my $windowInterval=shift();
+  print STDERR "########## $outputFile ##########\n";
   my ($fh,$tmpfile)=tempfile(DIR=>$outdir,TEMPLATE=>'hdrXXXXXX',SUFFIX=>'.txt');
+  print STDERR "Calculating position: $tmpfile\n";
   my $handler=openTable($tableFile,$matchNames);
   my ($reader,$type)=openPosition($posFile);
   my $basename=basename($tableFile);
   my $matchCount=scalar(@{$matchNames});
   if($type eq "position"){
     my @positions=();
+    my $posCount=0;
     while(!eof($reader)){
       my ($chr,$pos)=nextPosition($reader);
       my $size=int(($windowEnd-$windowStart)/$windowInterval)+1;
@@ -177,13 +212,18 @@ sub calculateHDR{
         print $fh "1\t$chr\t$region\t$pos$lineRatio\n";
         print $fh "2\t$chr\t$region\t$pos$lineTotal\n";
       }
+      $posCount++;
+      if($posCount%10000==0){print STDERR "$posCount...\n";}
     }
     close($fh);
+    print STDERR "Total position: $posCount\n";
     my ($fh2,$tmpfile2)=tempfile(DIR=>$outdir,TEMPLATE=>'sortXXXXXX',SUFFIX=>'.txt');
     close($fh2);
+    print STDERR "Sorting file: $tmpfile2\n";
     system("sort -k1,1n -k2,2 -k3,3n -k4,4n $tmpfile>$tmpfile2");
     unlink($tmpfile);
     my ($fh3,$tmpfile3)=tempfile(DIR=>$outdir,TEMPLATE=>'finalXXXXXX',SUFFIX=>'.txt');
+    print STDERR "Summarizing results: $tmpfile3\n";
     my $header2=($targetMode eq "dd")?"#Chr\tStart\tEnd\tHDR:1/2":"#Chr\tPosition\tRegionSize(kb)\tHDR:1/2";
     foreach my $matchName(@{$matchNames}){$header2.="\t".$matchName->[0];}
     print $fh3 "$header1\n$header2\n";
@@ -196,8 +236,10 @@ sub calculateHDR{
     close($fh3);
     unlink($tmpfile2);
     system("mv $tmpfile3 $outputFile");
+    print STDERR "Completed: $outputFile\n";
   }else{
     my @positions=();
+    my $posCount=0;
     while(!eof($reader)){
       my ($chr,$min,$max)=nextPosition($reader);
       @positions=nextTable($handler,$chr,$min,$max,@positions);
@@ -256,13 +298,18 @@ sub calculateHDR{
       }
       print $fh "1\t$chr\t$min\t$max$lineRatio\n";
       print $fh "2\t$chr\t$min\t$max$lineTotal\n";
+      $posCount++;
+      if($posCount%10000==0){print STDERR "$posCount...\n";}
     }
     close($fh);
+    print STDERR "Total position: $posCount\n";
     my ($fh2,$tmpfile2)=tempfile(DIR=>$outdir,TEMPLATE=>'sortXXXXXX',SUFFIX=>'.txt');
     close($fh2);
+    print STDERR "Sorting file: $tmpfile2\n";
     system("sort -k1,1n -k2,2 -k3,3n $tmpfile>$tmpfile2");
     unlink($tmpfile);
     my ($fh3,$tmpfile3)=tempfile(DIR=>$outdir,TEMPLATE=>'finalXXXXXX',SUFFIX=>'.txt');
+    print STDERR "Summarizing results: $tmpfile3\n";
     my $header2=($targetMode eq "dd")?"#Chr\tStart\tEnd\tHDR:1/2":"#Chr\tPosition\tRegionSize(kb)\tHDR:1/2";
     foreach my $matchName(@{$matchNames}){$header2.="\t".$matchName->[0];}
     print $fh3 "$header1\n$header2\n";
@@ -275,6 +322,7 @@ sub calculateHDR{
     close($fh3);
     unlink($tmpfile2);
     system("mv $tmpfile3 $outputFile");
+    print STDERR "Completed: $outputFile\n";
   }
 }
 ############################## createLabel ##############################

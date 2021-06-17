@@ -111,6 +111,15 @@ $project->interval	10
 $project->startDistance	10
 $project->endDistance	50
 ```
+- Example of config files can be found at testdata/
+  - testdata/configAD.txt  Example of config for AD mode
+  - testdata/configAD2.txt  Example of config for AD mode using already calculated VCF table.
+  - testdata/configAR.txt  Example of config for AR mode
+  - testdata/configDD.txt  Example of config for DD mode
+- By specifying path to VCFtable file, VCFtable computation step will be  
+```
+$project->vcftable	testAD/vcftable.txt
+```
 
 ## Scripts
 - Here are instructions on how to use each scripts.

@@ -36,10 +36,15 @@ if(!-e $tableFile){
 mkdir($outDir);
 my ($handler,$labels)=openTable($tableFile);
 my $writers=matchIndex(\@caseFiles,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$regionSize,$skipCount,$fullMode,$bedformat);
+my $regionCount=0;
 while(!eof($handler->[0])){
   checkRegion(nextTable($handler,$noindel),$writers,$stretchMode,$pickupNumber,$regionSize,$skipCount,$fullMode,$bedformat);
+  $regionCount++;
+  if($regionCount%10000==0){print STDERR "$regionCount...\n";}
 }
+print STDERR "Total number of regions: $regionCount\n";
 foreach my $writer(@{$writers}){close($writer->[2]);}
+print STDERR "Completed\n";
 ############################## absolutePath ##############################
 sub absolutePath{
 	my $path=shift();
@@ -129,7 +134,7 @@ sub help{
   print STDERR "    -s  Skip count (default=0)\n";
   print STDERR "\n";
   print STDERR "Author: akira.hasegawa\@riken.jp\n";
-  print STDERR "Update: 2020/07/17\n";
+  print STDERR "Update: 2021/06/17\n";
   print STDERR "\n";
   print STDERR "Example: $prgname -b -d -f -m het -o output -p 2 -r 2000000 -s 2 fulltable.txt case\n";
   print STDERR "  - Output in BED format\n";

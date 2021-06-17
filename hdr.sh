@@ -9,6 +9,7 @@ bin/moirai2.pl config $1
 echo "# Creating project directory..."
 perl bin/moirai2.pl -i 'root->project->$project' -o '$project->flag/dircreated->T' command << 'EOF'
 mkdir -p $project
+mkdir -p $project/log
 EOF
 
 echo "# List input directory..."
@@ -25,36 +26,34 @@ EOF
 
 echo "# Calculating Findrun..."
 # findrun
-perl bin/moirai2.pl -b '$noIndel:-d' -i '$project->targetMode->DD,$project->vcftable->$table,$project->case->$case,$case->input->$input,$project->noIndel->$noIndel,$project->stretchMode->$stretchMode,$project->pickupNumber->$pickupNumber,$project->regionSize->$regionSize,$project->skipCount->$skipCount' -o '$case->$project/position->$output' command << 'EOF'
+perl bin/moirai2.pl -b '$noIndel:-d' -i '$project->targetMode->DD,$project->vcftable->$table,$project->case->$case,$case->input->$input,$project->noIndel->$noIndel,$project->stretchMode->$stretchMode,$project->pickupNumber->$pickupNumber,$project->regionSize->$regionSize,$project->skipCount->$skipCount' -o '$case->$project/position->$output,$case->$project/findRunLog->$logFile' command << 'EOF'
 outdir=$project/findrun
-perl bin/findrun.pl $noIndel -m $stretchMode -p $pickupNumber -r $regionSize -s $skipCount -o $outdir $table $input
+logFile=$project/log/findrun.txt
+perl bin/findrun.pl $noIndel -m $stretchMode -p $pickupNumber -r $regionSize -s $skipCount -o $outdir $table $input 2> $logFile
 output=`ls $outdir/$case*`
 EOF
 
 echo "# Calculating HDR..."
 # DD mode
-perl bin/moirai2.pl -b '$excludeIndel:-d,$excludeLowQuality:-l' -i '$project->targetMode->DD,$project->vcftable->$table,$project->case->$case,$case->input->$input,$case->$project/position->$position,$project->indir->$control,$project->excludeIndel->$excludeIndel,$project->excludeLowQuality->$excludeLowQuality' -o '$case->$project/hdr->$output' command << 'EOF'
+perl bin/moirai2.pl -b '$excludeIndel:-d,$excludeLowQuality:-l' -i '$project->targetMode->DD,$project->vcftable->$table,$project->case->$case,$case->input->$input,$case->$project/position->$position,$project->indir->$control,$project->excludeIndel->$excludeIndel,$project->excludeLowQuality->$excludeLowQuality' -o '$case->$project/hdr->$output,$case->$project/hdrLog->$logFile' command << 'EOF'
 outdir=$project/hdr
-perl bin/hdr.pl $excludeIndel $excludeLowQuality -t DD -o $outdir $table $input $control $position
+logFile=$project/log/findrun.txt
+perl bin/hdr.pl $excludeIndel $excludeLowQuality -t DD -o $outdir $table $input $control $position 2> $logFile
 output=`ls $outdir/$case/*`
 EOF
 
 #AR/AD
-perl bin/moirai2.pl -b '$excludeIndel:-d,$excludeLowQuality:-l' -i '$project->targetMode->$targetMode,$project->vcftable->$table,$project->case->$case,$case->input->$input,$case->$project/position->$position,$project->indir->$control,$project->interval->$interval,$project->startDistance->$startDistance,$project->endDistance->$endDistance,$project->excludeIndel->$excludeIndel,$project->excludeLowQuality->$excludeLowQuality' -o '$case->$project/hdr->$output' command << 'EOF'
+perl bin/moirai2.pl -b '$excludeIndel:-d,$excludeLowQuality:-l' -i '$project->targetMode->$targetMode,$project->vcftable->$table,$project->case->$case,$case->input->$input,$case->$project/position->$position,$project->indir->$control,$project->interval->$interval,$project->startDistance->$startDistance,$project->endDistance->$endDistance,$project->excludeIndel->$excludeIndel,$project->excludeLowQuality->$excludeLowQuality' -o '$case->$project/hdr->$output,$case->$project/hdrLog->$logFile' command << 'EOF'
 outdir=$project/hdr
-perl bin/hdr.pl $excludeIndel $excludeLowQuality -t $targetMode -s $startDistance -e $endDistance -i $interval -o $outdir $table $input $control $position
+logFile=$project/log/findrun.txt
+perl bin/hdr.pl $excludeIndel $excludeLowQuality -t $targetMode -s $startDistance -e $endDistance -i $interval -o $outdir $table $input $control $position 2> $logFile
 output=`ls $outdir/$case/*`
 EOF
-echo "# Calculating statdel..."
-#DD
-perl bin/moirai2.pl -i '$project->targetMode->DD,$project->case->$case,$case->$project/hdr->$hdr' -o '$case->$project/stats->$output' -O "Results in file" command << 'EOF'
+echo "# Calculating statistics..."
+#AR/AD/DD
+perl bin/moirai2.pl -i '$project->case->$case,$case->$project/hdr->$hdr' -o '$case->$project/stats->$output,$case->$project/statsLog->$logFile' -O "Results in file" command << 'EOF'
 outdir=$project/stats
-perl bin/statdel.pl -o $outdir $hdr
-output=`ls $outdir/$case*`
-EOF
-#AR/AD
-perl bin/moirai2.pl -i '$project->targetMode->$targetMode,$project->case->$case,$case->$project/hdr->$hdr' -o '$case->$project/stats->$output' -O "Results in file" command << 'EOF'
-outdir=$project/stats
-perl bin/statdel.pl -m -o $outdir $hdr
+logFile=$project/log/stats.txt
+perl bin/statdel.pl -o $outdir $hdr 2> $logFile
 output=`ls $outdir/$case*`
 EOF
