@@ -1,6 +1,0 @@
-Input file: /Users/ah3q/Sites/github/HDRGenome/testAD/hdr/NA18942_v2/NA18942_v2_ad_10_50_10.txt
-Temporary input: /var/folders/12/f5vg17pn5c76pg7wccd147kw0000gp/T/o1Mu7wnvZZ
-Parameter file: /var/folders/12/f5vg17pn5c76pg7wccd147kw0000gp/T/ZTPXTiVvmO
-Temporary output: /var/folders/12/f5vg17pn5c76pg7wccd147kw0000gp/T/YgZGTbURM5
-Output file: testAD/stats/NA18942_v2_ad_10_50_10.out
-Command: /Users/ah3q/Sites/github/HDRGenome/bin/mac/maxstatRS

@@ -1,8 +1,0 @@
-Input file: /Users/ah3q/Sites/github/HDRGenome/testdata/input/NA18939_v2.vcf
-Sorting file: /tmp/NA18939_v2.chr1.sort.DBoijZ.txt
-Input file: /Users/ah3q/Sites/github/HDRGenome/testdata/input/NA18940_v2.vcf
-Sorting file: /tmp/NA18940_v2.chr1.sort.goSLgA.txt
-Input file: /Users/ah3q/Sites/github/HDRGenome/testdata/input/NA18941_v2.vcf
-Sorting file: /tmp/NA18941_v2.chr1.sort.6F3DMF.txt
-Input file: /Users/ah3q/Sites/github/HDRGenome/testdata/input/NA18942_v2.vcf
-Sorting file: /tmp/NA18942_v2.chr1.sort.1px1Od.txt
