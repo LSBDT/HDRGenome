@@ -1,0 +1,11 @@
+https://moirai2.github.io/schema/daemon/command	moirai/log/json/j20210701140934.json
+https://moirai2.github.io/schema/daemon/command/line	outdir=$project/stats;logFile=$project/log/stats.txt;perl bin/statdel.pl -o $outdir $hdr 2> $logFile;output=`ls $outdir/$case*`
+https://moirai2.github.io/schema/daemon/execute	completed
+https://moirai2.github.io/schema/daemon/timeended	1625116179
+https://moirai2.github.io/schema/daemon/timestarted	1625116178
+https://moirai2.github.io/schema/daemon/timethrown	1625116178
+moirai/log/json/j20210701140934.json#case	NA18942_v2
+moirai/log/json/j20210701140934.json#hdr	testAD/hdr/NA18942_v2/NA18942_v2_ad_10_50_10.txt
+moirai/log/json/j20210701140934.json#logFile	testAD/log/stats.txt
+moirai/log/json/j20210701140934.json#output	testAD/stats/NA18942_v2_ad_10_50_10.out
+moirai/log/json/j20210701140934.json#project	testAD

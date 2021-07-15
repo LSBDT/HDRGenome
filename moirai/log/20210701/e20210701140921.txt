@@ -1,0 +1,20 @@
+https://moirai2.github.io/schema/daemon/command	moirai/log/json/j20210701140919.json
+https://moirai2.github.io/schema/daemon/command/line	outdir=$project/hdr;logFile=$project/log/hdr.txt;perl bin/hdr.pl $excludeIndel $excludeLowQuality -t $targetMode -s $startDistance -e $endDistance -i $interval -o $outdir $table $input $control $position 2> $logFile;output=`ls $outdir/$case/*`
+https://moirai2.github.io/schema/daemon/execute	completed
+https://moirai2.github.io/schema/daemon/timeended	1625116164
+https://moirai2.github.io/schema/daemon/timestarted	1625116163
+https://moirai2.github.io/schema/daemon/timethrown	1625116163
+moirai/log/json/j20210701140919.json#case	NA18941_v2
+moirai/log/json/j20210701140919.json#control	testdata/input
+moirai/log/json/j20210701140919.json#endDistance	50
+moirai/log/json/j20210701140919.json#excludeIndel	F
+moirai/log/json/j20210701140919.json#excludeLowQuality	F
+moirai/log/json/j20210701140919.json#input	/Users/ah3q/Sites/github/HDRGenome/testdata/input/NA18941_v2.vcf
+moirai/log/json/j20210701140919.json#interval	10
+moirai/log/json/j20210701140919.json#logFile	testAD/log/hdr.txt
+moirai/log/json/j20210701140919.json#output	testAD/hdr/NA18941_v2/NA18941_v2_ad_10_50_10.txt
+moirai/log/json/j20210701140919.json#position	/Users/ah3q/Sites/github/HDRGenome/testdata/position/NA18941_v2.txt
+moirai/log/json/j20210701140919.json#project	testAD
+moirai/log/json/j20210701140919.json#startDistance	10
+moirai/log/json/j20210701140919.json#table	testAD/vcftable.txt
+moirai/log/json/j20210701140919.json#targetMode	AD

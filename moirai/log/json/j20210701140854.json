@@ -1,0 +1,1 @@
+{"https://moirai2.github.io/schema/daemon/bash":["mkdir -p $project","mkdir -p $project/log"],"https://moirai2.github.io/schema/daemon/input":["$project"]}

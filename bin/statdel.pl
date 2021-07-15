@@ -130,7 +130,7 @@ sub prepareInput{
 	}else{
 		my $hash={};
 		foreach my $token(@lines){$hash->{$token->[2]}++;}
-		@regionSizes=sort keys(%{$hash});
+		@regionSizes=sort {$a<=>$b}keys(%{$hash});
 		my $diffsize=scalar(keys(%{$hash}));
 		my $totalsize=scalar(@lines)/$diffsize/2;
 		my $casesize=1;

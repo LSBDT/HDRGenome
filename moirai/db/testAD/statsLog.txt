@@ -1,0 +1,4 @@
+NA18939_v2	testAD/log/stats.txt
+NA18940_v2	testAD/log/stats.txt
+NA18941_v2	testAD/log/stats.txt
+NA18942_v2	testAD/log/stats.txt
