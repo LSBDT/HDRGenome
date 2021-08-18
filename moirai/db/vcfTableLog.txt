@@ -1,1 +1,0 @@
-testAD	testAD/log/vcftable.txt

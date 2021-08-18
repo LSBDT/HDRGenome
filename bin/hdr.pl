@@ -31,8 +31,12 @@ if(defined($opt_h)||scalar(@ARGV)<4){
   print STDERR "    If you are using BCF files, please install bcftools\n";
   print STDERR "    http://samtools.github.io/bcftools/bcftools.html\n";
   print STDERR "\n";
+  print STDERR "    Position format is 'CHROM POS' (tab delim)\n";
+  print STDERR "    Chromosome can be number or or chr+number.\n";
+  print STDERR "    For example, '1' or 'chr1'\n";
+  print STDERR "\n";
   print STDERR "Author: akira.hasegawa\@riken.jp\n";
-  print STDERR "Update: 2021/06/17\n";
+  print STDERR "Update: 2021/08/18\n";
   exit(1);
 }
 my $tableFile=$ARGV[0];
@@ -462,9 +466,9 @@ sub nextTable{
 sub openPosition{
   my $file=shift();
   my $reader;
-  if($file=~/\.g(ip)?z$/){$reader=IO::File->new("gzip -cd $file|");}
-  elsif($file=~/\.b(ip)?z2$/){$reader=IO::File->new("bzip2 -cd $file|");}
-  else{$reader=IO::File->new($file);}
+  if($file=~/\.g(ip)?z$/){$reader=IO::File->new("gzip -cd $file|sort|");}
+  elsif($file=~/\.b(ip)?z2$/){$reader=IO::File->new("bzip2 -cd $file|sort|");}
+  else{$reader=IO::File->new("sort $file|");}
   my $line=<$reader>;
   chomp($line);
   my @tokens=split(/\t/,$line);

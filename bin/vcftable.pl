@@ -67,7 +67,9 @@ sub createTable{
   foreach my $chromosome(@{$chromosomes}){
     my @readers=();
     foreach my $basename(@{$basenames}){push(@readers,openTable($splitFiles->{$chromosome}->{$basename},$threshold));}
-    while(nextTable($writer,@readers)){}
+    my $count=0;
+    while(nextTable($writer,@readers)){$count++;}
+    print STDERR "$chromosome\t$count\n";
   }
   close($writer);
 }
