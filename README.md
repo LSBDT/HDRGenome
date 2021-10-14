@@ -22,7 +22,7 @@ hdrgenome/
 │   ├── rdf.pl - pipeline script
 │   ├── statdel - Mac version of stadel (binary)
 │   ├── statdel.pl - A wrapper script to run statdel
-│   ├── vcftable.pl - Merge multiple VCF files into one table
+│   └── vcftable.pl - Merge multiple VCF files into one table
 ├── docker.sh - Script to run pipeline with a docker.
 ├── hdr.sh - Script to run pipeline.
 ├── LINCENCE - LICENCE of this project

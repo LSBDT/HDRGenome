@@ -58,7 +58,7 @@ if(scalar(@ctrlFiles)==0){
   print STDERR "ERROR  Make sure you specify correct control files in the command line.\n";
   exit(1);
 }else{
-  print STDERR "Contro files: ".scalar(@ctrlFiles)."\n";
+  print STDERR "Control files: ".scalar(@ctrlFiles)."\n";
   foreach my $ctrlFile(@ctrlFiles){print STDERR "  $ctrlFile\n";}
 }
 if(scalar(@posFiles)==0){
