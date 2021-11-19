@@ -139,7 +139,7 @@ sub calculateHDR{
   my ($reader,$type)=openPosition($posFile);
   my $basename=basename($tableFile);
   my $matchCount=scalar(@{$matchNames});
-  if($type eq "position"){
+  if($type eq "position"){#AR/AD
     my @positions=();
     my $posCount=0;
     while(!eof($reader)){
@@ -213,8 +213,8 @@ sub calculateHDR{
           $lineRatio.="\t$ratio";
           $lineTotal.="\t$total";
         }
-        print $fh "1\t$chr\t$region\t$pos$lineRatio\n";
-        print $fh "2\t$chr\t$region\t$pos$lineTotal\n";
+        print $fh "$chr\t$pos\t$region\t1$lineRatio\n";
+        print $fh "$chr\t$pos\t$region\t2$lineTotal\n";
       }
       $posCount++;
       if($posCount%10000==0){print STDERR "$posCount...\n";}
@@ -224,24 +224,21 @@ sub calculateHDR{
     my ($fh2,$tmpfile2)=tempfile(DIR=>$outdir,TEMPLATE=>'sortXXXXXX',SUFFIX=>'.txt');
     close($fh2);
     print STDERR "Sorting file: $tmpfile2\n";
-    system("sort -k1,1n -k2,2 -k3,3n -k4,4n $tmpfile>$tmpfile2");
+    system("sort -k4,4n -k3,3n -k1,1n -k2,2 $tmpfile>$tmpfile2");
     unlink($tmpfile);
     my ($fh3,$tmpfile3)=tempfile(DIR=>$outdir,TEMPLATE=>'finalXXXXXX',SUFFIX=>'.txt');
     print STDERR "Summarizing results: $tmpfile3\n";
-    my $header2=($targetMode eq "dd")?"#Chr\tStart\tEnd\tHDR:1/2":"#Chr\tPosition\tRegionSize(kb)\tHDR:1/2";
+    my $header2="#Chr\tPosition\tRegionSize(kb)\tHDR:1/2";
     foreach my $matchName(@{$matchNames}){$header2.="\t".$matchName->[0];}
     print $fh3 "$header1\n$header2\n";
     open(IN,$tmpfile2);
-    while(<IN>){
-      my ($label,$chr,$region,$pos,@data)=split(/\t/);
-      print $fh3 "$chr\t$pos\t$region\t$label\t".join("\t",@data);
-    }
+    while(<IN>){print $fh3 "$_";}
     close(IN);
     close($fh3);
     unlink($tmpfile2);
     system("mv $tmpfile3 $outputFile");
     print STDERR "Completed: $outputFile\n";
-  }else{
+  }else{#DD
     my @positions=();
     my $posCount=0;
     while(!eof($reader)){
@@ -300,8 +297,8 @@ sub calculateHDR{
         $lineRatio.="\t$ratio";
         $lineTotal.="\t$total";
       }
-      print $fh "1\t$chr\t$min\t$max$lineRatio\n";
-      print $fh "2\t$chr\t$min\t$max$lineTotal\n";
+      print $fh "$chr\t$min\t$max\t1$lineRatio\n";
+      print $fh "$chr\t$min\t$max\t2$lineTotal\n";
       $posCount++;
       if($posCount%10000==0){print STDERR "$posCount...\n";}
     }
@@ -310,18 +307,15 @@ sub calculateHDR{
     my ($fh2,$tmpfile2)=tempfile(DIR=>$outdir,TEMPLATE=>'sortXXXXXX',SUFFIX=>'.txt');
     close($fh2);
     print STDERR "Sorting file: $tmpfile2\n";
-    system("sort -k1,1n -k2,2 -k3,3n $tmpfile>$tmpfile2");
+    system("sort -k4,4n -k1,1n -k2,2 -k3,3n $tmpfile>$tmpfile2");
     unlink($tmpfile);
     my ($fh3,$tmpfile3)=tempfile(DIR=>$outdir,TEMPLATE=>'finalXXXXXX',SUFFIX=>'.txt');
     print STDERR "Summarizing results: $tmpfile3\n";
-    my $header2=($targetMode eq "dd")?"#Chr\tStart\tEnd\tHDR:1/2":"#Chr\tPosition\tRegionSize(kb)\tHDR:1/2";
+    my $header2="#Chr\tStart\tEnd\tHDR:1/2";
     foreach my $matchName(@{$matchNames}){$header2.="\t".$matchName->[0];}
     print $fh3 "$header1\n$header2\n";
     open(IN,$tmpfile2);
-    while(<IN>){
-      my ($label,$chr,$min,$max,@data)=split(/\t/);
-      print $fh3 "$chr\t$min\t$max\t$label\t".join("\t",@data);
-    }
+    while(<IN>){print $fh3 "$_";}
     close(IN);
     close($fh3);
     unlink($tmpfile2);
