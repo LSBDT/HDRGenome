@@ -663,7 +663,6 @@ if($cmdurl eq "command"){
 	my $scripts=handleArray($opt_S);
 	if(defined($opt_x)){$suffixs=handleSuffix($opt_x);}
 	$cmdurl=createJson($moiraidir,$inputs,$outputs,$suffixs,$scripts,@lines);
-	if(!defined($opt_q)){$sleeptime=1;}
 }elsif($cmdurl eq "compact"){
 	my @lines=();
 	while(<STDIN>){
@@ -708,13 +707,11 @@ while(true){
 	my $jobs_running=getNumberOfJobsRunning();
 	if($jobs_running>=$maxjob){sleep($sleeptime);next;}
 	my $job_remaining=getNumberOfJobsRemaining();
-	if($job_remaining==0){
-		controlWorkflow($executes,$processes,$commands);
-		last;
-	}
+	if($job_remaining==0){controlWorkflow($executes,$processes,$commands);last;}
 	if($jobs_running>=$job_remaining){sleep($sleeptime);next;}
 	loadExecutes($commands,$executes,\@execurls);
 	mainProcess(\@execurls,$commands,$executes,$processes,$maxjob-$jobs_running);
+	sleep(1);
 }
 if(!defined($cmdurl)){
 	# command URL not defined

@@ -18,9 +18,14 @@ hdrgenome/
 ├── bin/
 │   ├── findrun.pl - Uses table from vcftable.pl to compute HDR
 │   ├── hdr.pl - Uses table from vcftable.pl to compute HDR
+│   ├── linux/ - linux binary directory
+│   │   ├── maxstatRS - Linux version of stadel (binary)
+│   │   └── statdel - Linux version of stadel (binary)
+│   ├── mac/ - Mac binary directory
+│   │   ├── maxstatRS - MacOS version of stadel (binary)
+│   │   └── statdel - MacOS version of stadel (binary)
 │   ├── moirai2.pl - workflow script
 │   ├── rdf.pl - pipeline script
-│   ├── statdel - Mac version of stadel (binary)
 │   ├── statdel.pl - A wrapper script to run statdel
 │   └── vcftable.pl - Merge multiple VCF files into one table
 ├── docker.sh - Script to run pipeline with a docker.
@@ -28,16 +33,16 @@ hdrgenome/
 ├── LINCENCE - LICENCE of this project
 ├── README - README of this project
 └── testdata - Test data used in test case
-    ├── case/ -  sample VCF files of case
     ├── configAD.txt - config file used by a pipeline for test data
     ├── configAD2.txt - config file used by a pipeline for test data
     ├── configAR.txt - config file used by a pipeline for test data
     ├── configDD.txt - config file used by a pipeline for test data
-    ├── ctrl/ -  sample VCF files of control
-    ├── hdr/ -  cxample of hdr output
+    ├── input/ -  sample VCF files of case/control
     ├── position/
-    │   ├── CHR_POS_NA18939_v2.txt - position TSV used by test case
-    │   └── Region_NA18939_v2.txt - region TSV used by test case
+    │   ├── NA18939_v2.txt - region TSV used by test case NA18939_v2
+    │   ├── NA18940_v2.txt - region TSV used by test case NA18940_v2
+    │   ├── NA18941_v2.txt - region TSV used by test case NA18941_v2
+    │   └── NA18942_v2.txt - region TSV used by test case NA18942_v2
     └── statdel/ - example of statdel output
 ```
 ## URL
