@@ -2,14 +2,16 @@
 use strict 'vars';
 use Cwd;
 use File::Basename;
-use File::Temp;
+use File::Temp qw/tempfile tempdir/;
 use FileHandle;
 use Getopt::Std;
-use File::Temp qw/tempfile tempdir/;
+use IO::File;
+use Time::localtime;
 ############################## HEADER ##############################
-my ($program_name,$prgdir,$program_suffix)=fileparse($0);
-$prgdir=Cwd::abs_path($prgdir);
-my $program_path="$prgdir/$program_name";
+my ($program_name,$program_directory,$program_suffix)=fileparse($0);
+$program_directory=Cwd::abs_path($program_directory);
+my $program_path="$program_directory/$program_name";
+my $program_version="2022/08/15";
 ############################## OPTIONS ##############################
 use vars qw($opt_h $opt_o);
 getopts('ho:');
@@ -19,7 +21,7 @@ sub help{
 	print "############################## HELP ##############################\n";
 	print "\n";
 	print "Program: statdel and maxstatRS wrapper program.\n";
-	print "Version: 2021/06/17\n";
+	print "Version: $program_version\n";
 	print "Author: Akira Hasegawa (akira.hasegawa\@riken.jp)\n";
 	print "\n";
 	print "Usage: perl statdel.pl -o OUTDIR INPUT\n";
@@ -29,7 +31,8 @@ sub help{
 	print "\n";
 }
 ############################## MAIN ##############################
-if(defined($opt_h)||scalar(@ARGV)<1){help();exit(1);}
+if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
+elsif(defined($opt_h)||scalar(@ARGV)<1){help();exit();}
 my @inputs=@ARGV;
 my @regionSizes=();#for AR/D mode,
 my $outdir=(defined($opt_o))?$opt_o:"out";
@@ -47,41 +50,19 @@ foreach my $input(@inputs){
 	print STDERR "Parameter file: $param\n";
 	print STDERR "Temporary output: $tmpOutput\n";
 	print STDERR "Output file: $output\n";
-	print STDERR "Command: $prgdir/$os/$program\n";
-	system("$prgdir/$os/$program $param");
+	print STDERR "Command: $program_directory/$os/$program\n";
+	system("$program_directory/$os/$program $param");
 	handleOutput($tmpOutput,$output);
 }
-############################## handleOutput ##############################
-sub handleOutput{
-	my $tmpfile=shift();
-	my $output=shift();
-	my ($writer,$tmpfile2)=tempfile();
-	open(IN,$tmpfile);
-	while(<IN>){
-		chomp;
-		print $writer "$_\n";
-		if(/Mean HDR/){
-			my $label=<IN>;
-			$label=chomp2($label);
-			my @token=split(/\s+/,$label);
-			print $writer join("\t",@token)."\n";
-			last;
-		}
-	}
-	while(<IN>){
-		my $line=chomp2($_);
-		my @token=split(/\s+/,$line);
-		if($token[7]==23){$token[7]="chrX";}
-		elsif($token[7]==24){$token[7]="chrY";}
-		elsif($token[7]==25){$token[7]="chrM";}
-		else{$token[7]="chr".$token[7];}
-		$token[8]=~s/,//g;
-		$token[9]=~s/,//g;
-		print $writer join("\t",@token)."\n";
-	}
-	close(IN);
-	close($writer);
-	system("mv $tmpfile2 $output");
+############################## absolutePath ##############################
+sub absolutePath {
+	my $path=shift();
+	my $directory=dirname($path);
+	my $filename=basename($path);
+	my $path=Cwd::abs_path($directory)."/$filename";
+	$path=~s/\/\.\//\//g;
+	$path=~s/\/\.$//g;
+	return $path
 }
 ############################## chomp2 ##############################
 sub chomp2{
@@ -90,12 +71,109 @@ sub chomp2{
 	if($line=~/^\s+(.+)$/){$line=$1;}
 	return $line;
 }
-############################## prepareOutput ##############################
-sub prepareOutput{
-	my ($writer,$tmp)=tempfile(UNLINK=>1);
+############################## getDate ##############################
+sub getDate{
+	my $delim=shift();
+	my $time=shift();
+	if(!defined($delim)){$delim="";}
+	if(!defined($time)||$time eq ""){$time=localtime();}
+	else{$time=localtime($time);}
+	my $year=$time->year+1900;
+	my $month=$time->mon+1;
+	if($month<10){$month="0".$month;}
+	my $day=$time->mday;
+	if($day<10){$day="0".$day;}
+	return $year.$delim.$month.$delim.$day;
+}
+############################## handleOutput ##############################
+sub handleOutput{
+	my $tmpfile=shift();
+	my $output=shift();
+	my ($writer,$tmpfile2)=tempfile();
+	open(IN,$tmpfile);
+	my $program;
+	while(<IN>){
+		chomp;
+		print $writer "$_\n";
+		if(/Mean HDR/){
+			my $line=<IN>;
+			if($line=~/Var/){$program="maxstatRS";}
+			else{$program="statdel"}
+			print $writer $line;
+			last;
+		}
+	}
+	if($program eq"statdel"){
+		while(<IN>){
+			if(/^\s+$/){print $writer $_;next;}
+			if(/Note:/){print $writer $_;last;}
+			my $line=chomp2($_);
+			my @token=split(/\s+/,$line);
+			if(scalar(@token)!=13){print STDERR "ERROR not 13:".join("\t",@token)."\n";next;}
+			if($token[7]==23){$token[7]="chrX";}
+			elsif($token[7]==24){$token[7]="chrY";}
+			elsif($token[7]==25){$token[7]="chrM";}
+			else{$token[7]="chr".$token[7];}
+			$token[8]=~s/,//g;
+			$token[9]=~s/,//g;
+			print $writer join("\t",@token)."\n";
+		}
+	}elsif($program eq"maxstatRS"){
+		while(<IN>){
+			if(/^\s+$/){print $writer $_;next;}
+			if(/Note:/){print $writer $_;last;}
+			my $line=chomp2($_);
+			my @token=split(/\s+/,$line);
+			if(scalar(@token)!=13){print STDERR "ERROR not 13:".join("\t",@token)."\n";next;}
+			if($token[8]==23){$token[8]="chrX";}
+			elsif($token[8]==24){$token[8]="chrY";}
+			elsif($token[8]==25){$token[8]="chrM";}
+			else{$token[8]="chr".$token[8];}
+			$token[9]=~s/,//g;
+			print $writer join("\t",@token)."\n";
+		}
+	}
+	close(IN);
 	close($writer);
-	unlink($tmp);
-	return $tmp;
+	system("mv $tmpfile2 $output");
+}
+############################## listFiles ##############################
+sub listFiles{
+	my @input_directories=@_;
+	my $file_suffix=shift(@input_directories);
+	my @input_files=();
+	foreach my $input_directory (@input_directories){
+		$input_directory=absolutePath($input_directory);
+		if(-f $input_directory){push(@input_files,$input_directory);next;}# It's a file, so process file
+		elsif(-l $input_directory){push(@input_files,$input_directory);next;}# It's a file, so process file
+		opendir(DIR,$input_directory);
+		foreach my $file(readdir(DIR)){# go through input directory
+			if($file eq "."){next;}
+			if($file eq "..") {next;}
+			if($file eq ""){next;}
+			$file="$input_directory/$file";
+			if(-d $file){next;}# skip directory element
+			elsif($file!~/$file_suffix$/){next;}
+			push(@input_files,$file);
+		}
+		closedir(DIR);
+	}
+	return sort{$a cmp $b}@input_files;
+}
+############################## openFile ##############################
+sub openFile{
+	my $path=shift();
+	if($path=~/^(.+\@.+)\:(.+)$/){
+		if($path=~/\.gz(ip)?$/){return IO::File->new("ssh $1 'gzip -cd $2'|");}
+		elsif($path=~/\.bz(ip)?2$/){return IO::File->new("ssh $1 'bzip2 -cd $2'|");}
+		elsif($path=~/\.bam$/){return IO::File->new("ssh $1 'samtools view $2'|");}
+		else{return IO::File->new("ssh $1 'cat $2'|");}
+	}else{
+		if($path=~/\.gz(ip)?$/){return IO::File->new("gzip -cd $path|");}
+		elsif($path=~/\.bz(ip)?2$/){return IO::File->new("bzip2 -cd $path|");}
+		elsif($path=~/\.bam$/){return IO::File->new("samtools view $path|");}
+		else{return IO::File->new($path);}
+	}
 }
 ############################## prepareInput ##############################
 sub prepareInput{
@@ -142,6 +220,13 @@ sub prepareInput{
 	close($writer);
 	return ($tmp,$program);
 }
+############################## prepareOutput ##############################
+sub prepareOutput{
+	my ($writer,$tmp)=tempfile(UNLINK=>1);
+	close($writer);
+	unlink($tmp);
+	return $tmp;
+}
 ############################## prepareParamMaxstatRS ##############################
 sub prepareParamMaxstatRS{
 	my $input=shift();
@@ -173,39 +258,6 @@ sub prepareParamStatdel{
 	print $writer "$output\n";
 	close($writer);
 	return $tmp;
-}
-############################## absolutePath ##############################
-sub absolutePath {
-	my $path=shift();
-	my $directory=dirname($path);
-	my $filename=basename($path);
-	my $path=Cwd::abs_path($directory)."/$filename";
-	$path=~s/\/\.\//\//g;
-	$path=~s/\/\.$//g;
-	return $path
-}
-############################## listFiles ##############################
-sub listFiles{
-	my @input_directories=@_;
-	my $file_suffix=shift(@input_directories);
-	my @input_files=();
-	foreach my $input_directory (@input_directories){
-		$input_directory=absolutePath($input_directory);
-		if(-f $input_directory){push(@input_files,$input_directory);next;}# It's a file, so process file
-		elsif(-l $input_directory){push(@input_files,$input_directory);next;}# It's a file, so process file
-		opendir(DIR,$input_directory);
-		foreach my $file(readdir(DIR)){# go through input directory
-			if($file eq "."){next;}
-			if($file eq "..") {next;}
-			if($file eq ""){next;}
-			$file="$input_directory/$file";
-			if(-d $file){next;}# skip directory element
-			elsif($file!~/$file_suffix$/){next;}
-			push(@input_files,$file);
-		}
-		closedir(DIR);
-	}
-	return sort{$a cmp $b}@input_files;
 }
 ############################## printTable ##############################
 sub printTable{
@@ -249,4 +301,40 @@ sub printTableSub{
 		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
 	}
 	return wantarray?@output:$output[0];
+}
+############################## sortSubs ##############################
+sub sortSubs{
+	my $path="$program_directory/$program_name";
+	my $reader=openFile($path);
+	my @headers=();
+	my $name;
+	my $blocks={};
+	my $block=[];
+	my $date=getDate("/");
+	my @orders=();
+	while(<$reader>){
+		chomp;s/\r//g;
+		if(/^#{30}\s*(\S+)\s*#{30}$/){
+			$name=$1;
+			if($name!~/^[A-Z]+$/){push(@{$block},$_);last;}
+		}elsif(/^my \$program_version=\"\S+\";/){$_="my \$program_version=\"$date\";";}
+		push(@headers,$_);
+	}
+	while(<$reader>){
+		chomp;s/\r//g;
+		if(/^#{30}\s*(\S+)\s*#{30}$/){
+			$blocks->{$name}=$block;
+			push(@orders,$name);
+			$name=$1;
+			$block=[];
+		}
+		push(@{$block},$_);
+	}
+	close($reader);
+	if(defined($name)){$blocks->{$name}=$block;push(@orders,$name);}
+	my ($writer,$file)=tempfile(DIR=>"/tmp",SUFFIX=>".pl");
+	foreach my $line(@headers){print $writer "$line\n";}
+	foreach my $key(sort{$a cmp $b}@orders){foreach my $line(@{$blocks->{$key}}){print $writer "$line\n";}}
+	close($writer);
+	return system("mv $file $path");
 }

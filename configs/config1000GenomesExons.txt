@@ -1,0 +1,44 @@
+#project
+$project	1000GenomesExon
+root->project	$project
+$project->project#indir		$project/input
+#download
+$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/CEU.exon.2010_03.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/CHB.exon.2010_03.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/CHD.exon.2010_03.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/JPT.exon.2010_03.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/LWK.exon.2010_03.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/TSI.exon.2010_03.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/YRI.exon.2010_03.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/CEU.exon.2010_03.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/CHB.exon.2010_03.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/CHD.exon.2010_03.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/JPT.exon.2010_03.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/LWK.exon.2010_03.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/TSI.exon.2010_03.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/snps/YRI.exon.2010_03.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/CEU.exon.2010_06.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/CHB.exon.2010_06.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/CHD.exon.2010_06.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/JPT.exon.2010_06.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/TSI.exon.2010_06.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/YRI.exon.2010_06.genotypes.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/CEU.exon.2010_06.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/CHB.exon.2010_06.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/CHD.exon.2010_06.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/JPT.exon.2010_06.sites.vcf.gz
+#$project->download#url->ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/TSI.exon.2010_06.sites.vcf.gz
+#$project->download#url->tp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/pilot_data/release/2010_07/exon/indel/YRI.exon.2010_06.sites.vcf.gz
+#configs
+$project->vcftable#qvThreshold	50
+$project->findrun#noIndel	F
+$project->findrun#stretchMode	hom
+$project->findrun#pickupNumber	1
+$project->findrun#regionSize	1000000
+$project->findrun#skipCount	0
+$project->hdr#targetMode	DD
+$project->hdr#excludeIndel	F
+$project->hdr#excludeLowQuality	F
+$project->annotation#genome->hg38
+hg19->chrominfo->annotation/hg19.genome
+hg38->chrominfo->annotation/hg38.genome

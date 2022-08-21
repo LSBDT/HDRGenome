@@ -1,0 +1,16 @@
+#project
+$project	testAD
+root->project	$project
+$project->project#indir		testdata/input
+$project->project#positiondir	testdata/position
+#configs
+$project->vcftable#qvThreshold	50
+$project->hdr#targetMode	AD
+$project->hdr#excludeIndel	F
+$project->hdr#excludeLowQuality	F
+$project->hdr#startDistance	10
+$project->hdr#endDistance	50
+$project->hdr#interval	10
+$project->annotation#genome->hg38
+hg19->chrominfo->annotation/hg19.genome
+hg38->chrominfo->annotation/hg38.genome

@@ -2,14 +2,22 @@
 use strict 'vars';
 use Cwd;
 use File::Basename;
-use File::Temp qw/tempfile/;
+use File::Temp qw/tempfile tempdir/;
+use FileHandle;
 use Getopt::Std;
 use IO::File;
+use Time::localtime;
+############################## HEADER ##############################
+my ($program_name,$program_directory,$program_suffix)=fileparse($0);
+$program_directory=Cwd::abs_path($program_directory);
+my $program_path="$program_directory/$program_name";
+my $program_version="2022/08/15";
+############################## OPTIONS ##############################
 use vars qw($opt_d $opt_e $opt_h $opt_i $opt_l $opt_o $opt_s $opt_t);
 getopts('de:hi:lo:s:t:');
-my ($prgname,$prgdir,$prgsuffix)=fileparse($0);
-if(defined($opt_h)||scalar(@ARGV)<4){
-  print STDERR "Command: $prgname [OPTIONS] TABLE CASE CTRL POS\n";
+############################## HELP ##############################
+sub help{
+  print STDERR "Command: $program_name [OPTIONS] TABLE CASE CTRL POS\n";
   print STDERR "Arguments:\n";
   print STDERR " TABLE  Table file from vcftable.pl\n";
   print STDERR "  CASE  Case file/directory\n";
@@ -36,30 +44,87 @@ if(defined($opt_h)||scalar(@ARGV)<4){
   print STDERR "    For example, '1' or 'chr1'\n";
   print STDERR "\n";
   print STDERR "Author: akira.hasegawa\@riken.jp\n";
-  print STDERR "Update: 2021/08/18\n";
+  print STDERR "Update: $program_version\n";
   exit(1);
 }
+############################## retrieveCtrlNamesFromTable ##############################
+sub retrieveCtrlNamesFromTable{
+  my $tableFile=shift();
+  my $reader=openFile($tableFile);
+  my $line=<$reader>;
+  close($reader);
+  chomp($line);
+  my @names=split(/\t/,$line);
+  shift(@names);shift(@names);
+  return \@names;
+}
+############################## printTable ##############################
+sub printTable{
+	my @out=@_;
+	my $return_type=$out[0];
+	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
+	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
+	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
+	else{$return_type= 2;}
+	printTableSub($return_type,"",@out);
+}
+sub printTableSub{
+	my @out=@_;
+	my $return_type=shift(@out);
+	my $string=shift(@out);
+	my @output=();
+	for(@out){
+		if(ref($_)eq"ARRAY"){
+			my @array=@{$_};
+			my $size=scalar(@array);
+			if($size==0){
+				if($return_type==0){print $string."[]\n";}
+				elsif($return_type==1){push(@output,$string."[]");}
+				elsif($return_type==2){print STDERR $string."[]\n";}
+			}else{
+				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
+			}
+		} elsif(ref($_)eq"HASH"){
+			my %hash=%{$_};
+			my @keys=sort{$a cmp $b}keys(%hash);
+			my $size=scalar(@keys);
+			if($size==0){
+				if($return_type==0){print $string."{}\n";}
+				elsif($return_type==1){push( @output,$string."{}");}
+				elsif($return_type==2){print STDERR $string."{}\n";}
+			}else{
+				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
+			}
+		}elsif($return_type==0){print "$string\"$_\"\n";}
+		elsif($return_type==1){push( @output,"$string\"$_\"");}
+		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
+	}
+	return wantarray?@output:$output[0];
+}
+############################## MAIN ##############################
+if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
+elsif(defined($opt_h)||scalar(@ARGV)<3){help();exit();}
 my $tableFile=$ARGV[0];
-my @caseFiles=listFiles("\\.([vb]cf|avinput)\$",$ARGV[1]);
-my @ctrlFiles=listFiles("\\.([vb]cf|avinput)\$",$ARGV[2]);
-@ctrlFiles=removeCaseFromCtrl(\@caseFiles,\@ctrlFiles);
-my @posFiles=listFiles("\\.te?xt\$",$ARGV[3]);
+my $caseNames=[split(/,/,$ARGV[1])];
+my @posFiles=listFiles("\\.te?xt\$",$ARGV[2]);
+my $ctrlNames=retrieveCtrlNamesFromTable($tableFile);
+$ctrlNames=removeCaseFromCtrl($caseNames,$ctrlNames);
 print STDERR "########## Setting ##########\n";
-if(scalar(@caseFiles)==0){
+if(scalar(@{$caseNames})==0){
   print STDERR "ERROR  Number of case file is 0.";
   print STDERR "ERROR  Make sure you specify correct case files in the command line.\n";
   exit(1);
 }else{
-  print STDERR "Case files: ".scalar(@caseFiles)."\n";
-  foreach my $caseFile(@caseFiles){print STDERR "  $caseFile\n";}
+  print STDERR "Cases: ".scalar(@{$caseNames})."\n";
+  foreach my $case(@{$caseNames}){print STDERR "  $case\n";}
 }
-if(scalar(@ctrlFiles)==0){
+if(scalar(@{$ctrlNames})==0){
   print STDERR "ERROR  Number of control file is 0.";
   print STDERR "ERROR  Make sure you specify correct control files in the command line.\n";
   exit(1);
 }else{
-  print STDERR "Control files: ".scalar(@ctrlFiles)."\n";
-  foreach my $ctrlFile(@ctrlFiles){print STDERR "  $ctrlFile\n";}
+  print STDERR "Controls: ".scalar(@{$ctrlNames})."\n";
+  foreach my $ctrl(@{$ctrlNames}){print STDERR "  $ctrl\n";}
 }
 if(scalar(@posFiles)==0){
   print STDERR "ERROR  Number of position file is 0.";
@@ -84,7 +149,7 @@ print STDERR "Target mode: $targetMode\n";
 print STDERR "Window interval: $windowInterval\n";
 print STDERR "Window start: $windowStart\n";
 print STDERR "Window end: $windowEnd\n";
-my ($matchNames,$caseNames,$ctrlNames)=matchFiles(\@caseFiles,\@ctrlFiles);
+my $matchNames=matchNames($caseNames,$ctrlNames);
 for(my $i=0;$i<scalar(@{$caseNames});$i++){
   my $caseName=$caseNames->[$i];
   my $matchName=$matchNames->[$i];
@@ -101,16 +166,6 @@ for(my $i=0;$i<scalar(@{$caseNames});$i++){
     $outFile="$outdir/$caseName/$outFile";
     calculateHDR($matchName,$targetMode,$noindel,$nolowqc,$tableFile,$posFile,$label,$outFile,$windowStart,$windowEnd,$windowInterval);
   }
-}
-############################## removeCaseFromCtrl ##############################
-sub removeCaseFromCtrl{
-  my $caseFiles=shift();
-  my $ctrlFiles=shift();
-  my $hash={};
-  foreach my $case(@{$caseFiles}){$hash->{$case}=1;}
-  my @array=();
-  foreach my $ctrl(@{$ctrlFiles}){if(!exists($hash->{$ctrl})){push(@array,$ctrl);}}
-  return @array;
 }
 ############################## absolutePath ##############################
 sub absolutePath{
@@ -343,6 +398,20 @@ sub createLabel{
   my $size=(scalar(@tokens)>2)?1:int(($windowEnd-$windowStart)/$windowInterval)+1;
   return "$count $ctrlCount $size # 1:chr1";
 }
+############################## getDate ##############################
+sub getDate{
+	my $delim=shift();
+	my $time=shift();
+	if(!defined($delim)){$delim="";}
+	if(!defined($time)||$time eq ""){$time=localtime();}
+	else{$time=localtime($time);}
+	my $year=$time->year+1900;
+	my $month=$time->mon+1;
+	if($month<10){$month="0".$month;}
+	my $day=$time->mday;
+	if($day<10){$day="0".$day;}
+	return $year.$delim.$month.$delim.$day;
+}
 ############################## listFiles ##############################
 sub listFiles{
 	my @input_directories=@_;
@@ -366,50 +435,34 @@ sub listFiles{
 	}
 	return sort(@input_files);
 }
-############################## matchFiles ##############################
-sub matchFiles{
-  my $caseFiles=shift();
-  my $ctrlFiles=shift();
-  my @caseNames=();
-  foreach my $caseFile(@{$caseFiles}){
-    my $basename=basename($caseFile);
-    if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
-    push(@caseNames,$basename);
-  }
-  my @ctrlNames=();
-  foreach my $ctrlFile(@{$ctrlFiles}){
-    my $basename=basename($ctrlFile);
-    if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
-    push(@ctrlNames,$basename);
-  }
+############################## matchNames ##############################
+sub matchNames{
+  my $caseNames=shift();
+  my $ctrlNames=shift();
+  my $caseSize=scalar(@{$caseNames});
+  my $ctrlSize=scalar(@{$ctrlNames});
   my @matchNames=();
-  for(my $i=0;$i<scalar(@caseNames);$i++){
+  for(my $i=0;$i<$caseSize;$i++){
     my @array=();
-    my $caseName=$caseNames[$i];
-    my $caseLabel=(scalar(@caseNames)==1)?"Case":"Case".($i+1);
-    for(my $j=0;$j<scalar(@ctrlNames);$j++){
-      my $ctrlName=$ctrlNames[$j];
-      my $ctrlLabel=(scalar(@ctrlNames)==1)?"Ctrl":"Ctrl".($j+1);
+    my $caseName=$caseNames->[$i];
+    my $caseLabel=($caseSize==1)?"Case":"Case".($i+1);
+    for(my $j=0;$j<$ctrlSize;$j++){
+      my $ctrlName=$ctrlNames->[$j];
+      my $ctrlLabel=($ctrlSize==1)?"Ctrl":"Ctrl".($j+1);
       push(@array,["$caseLabel-$ctrlLabel",$caseName,$ctrlName]);
     }
-    for(my $j=0;$j<scalar(@ctrlNames);$j++){
-      my $ctrlName1=$ctrlNames[$j];
-      my $ctrlLabel1=(scalar(@ctrlNames)==1)?"Ctrl":"Ctrl".($j+1);
-      for(my $k=$j+1;$k<scalar(@ctrlNames);$k++){
-        my $ctrlName2=$ctrlNames[$k];
-        my $ctrlLabel2=(scalar(@ctrlNames)==1)?"Ctrl":"Ctrl".($k+1);
+    for(my $j=0;$j<$ctrlSize;$j++){
+      my $ctrlName1=$ctrlNames->[$j];
+      my $ctrlLabel1=($ctrlSize==1)?"Ctrl":"Ctrl".($j+1);
+      for(my $k=$j+1;$k<$ctrlSize;$k++){
+        my $ctrlName2=$ctrlNames->[$k];
+        my $ctrlLabel2=($ctrlSize==1)?"Ctrl":"Ctrl".($k+1);
         push(@array,["$ctrlLabel1-$ctrlLabel2",$ctrlName1,$ctrlName2]);
       }
     }
     push(@matchNames,\@array);
   }
-  return (\@matchNames,\@caseNames,\@ctrlNames);
+  return \@matchNames;
 }
 ############################## nextPosition ##############################
 sub nextPosition{
@@ -456,6 +509,21 @@ sub nextTable{
   else{$handler->[1]=[$chr,$pos,@data];}
   return @positions;
 }
+############################## openFile ##############################
+sub openFile{
+	my $path=shift();
+	if($path=~/^(.+\@.+)\:(.+)$/){
+		if($path=~/\.gz(ip)?$/){return IO::File->new("ssh $1 'gzip -cd $2'|");}
+		elsif($path=~/\.bz(ip)?2$/){return IO::File->new("ssh $1 'bzip2 -cd $2'|");}
+		elsif($path=~/\.bam$/){return IO::File->new("ssh $1 'samtools view $2'|");}
+		else{return IO::File->new("ssh $1 'cat $2'|");}
+	}else{
+		if($path=~/\.gz(ip)?$/){return IO::File->new("gzip -cd $path|");}
+		elsif($path=~/\.bz(ip)?2$/){return IO::File->new("bzip2 -cd $path|");}
+		elsif($path=~/\.bam$/){return IO::File->new("samtools view $path|");}
+		else{return IO::File->new($path);}
+	}
+}
 ############################## openPosition ##############################
 sub openPosition{
   my $file=shift();
@@ -490,4 +558,50 @@ sub openTable{
   chomp($line);
   my @tokens=split(/\t/,$line);
   return [$reader,\@tokens];
+}
+############################## removeCaseFromCtrl ##############################
+sub removeCaseFromCtrl{
+  my $cases=shift();
+  my $ctrls=shift();
+  my $hash={};
+  foreach my $case(@{$cases}){$hash->{$case}=1;}
+  my @array=();
+  foreach my $ctrl(@{$ctrls}){if(!exists($hash->{$ctrl})){push(@array,$ctrl);}}
+  return \@array;
+}
+############################## sortSubs ##############################
+sub sortSubs{
+	my $path="$program_directory/$program_name";
+	my $reader=openFile($path);
+	my @headers=();
+	my $name;
+	my $blocks={};
+	my $block=[];
+	my $date=getDate("/");
+	my @orders=();
+	while(<$reader>){
+		chomp;s/\r//g;
+		if(/^#{30}\s*(\S+)\s*#{30}$/){
+			$name=$1;
+			if($name!~/^[A-Z]+$/){push(@{$block},$_);last;}
+		}elsif(/^my \$program_version=\"\S+\";/){$_="my \$program_version=\"$date\";";}
+		push(@headers,$_);
+	}
+	while(<$reader>){
+		chomp;s/\r//g;
+		if(/^#{30}\s*(\S+)\s*#{30}$/){
+			$blocks->{$name}=$block;
+			push(@orders,$name);
+			$name=$1;
+			$block=[];
+		}
+		push(@{$block},$_);
+	}
+	close($reader);
+	if(defined($name)){$blocks->{$name}=$block;push(@orders,$name);}
+	my ($writer,$file)=tempfile(DIR=>"/tmp",SUFFIX=>".pl");
+	foreach my $line(@headers){print $writer "$line\n";}
+	foreach my $key(sort{$a cmp $b}@orders){foreach my $line(@{$blocks->{$key}}){print $writer "$line\n";}}
+	close($writer);
+	return system("mv $file $path");
 }

@@ -15,6 +15,9 @@
 ## Structure
 ```
 hdrgenome/
+├── annotation/ - files for annotation
+│   ├── cytoBand_hg19.bed 
+│   └── cytoBand_hg38.bed 
 ├── bin/
 │   ├── findrun.pl - Uses table from vcftable.pl to compute HDR
 │   ├── hdr.pl - Uses table from vcftable.pl to compute HDR
@@ -37,12 +40,18 @@ hdrgenome/
     ├── configAD2.txt - config file used by a pipeline for test data
     ├── configAR.txt - config file used by a pipeline for test data
     ├── configDD.txt - config file used by a pipeline for test data
+    ├── download1000GenomesChromosomeSamples.sh - download sample chromosome VCF files from 1000Genomes
+    ├── download1000GenomesExonSamples.sh - download sample exon VCF files from 1000Genomes
     ├── input/ -  sample VCF files of case/control
+    │   ├── NA18939_v2.vcf - variant call format of NA18939_v2 patient
+    │   ├── NA18940_v2.vcf - variant call format of NA18940_v2
+    │   ├── NA18941_v2.vcf - variant call format of NA18941_v2
+    │   └── NA18942_v2.vcf - variant call format of NA18942_v2
     ├── position/
-    │   ├── NA18939_v2.txt - region TSV used by test case NA18939_v2
-    │   ├── NA18940_v2.txt - region TSV used by test case NA18940_v2
-    │   ├── NA18941_v2.txt - region TSV used by test case NA18941_v2
-    │   └── NA18942_v2.txt - region TSV used by test case NA18942_v2
+    │   ├── NA18939_v2.txt - region to investigate for test case NA18939_v2
+    │   ├── NA18940_v2.txt - region to investigate for test case NA18940_v2
+    │   ├── NA18941_v2.txt - region to investigate for test case NA18941_v2
+    │   └── NA18942_v2.txt - region to investigate for test case NA18942_v2
     └── statdel/ - example of statdel output
 ```
 ## URL
@@ -56,7 +65,7 @@ hdrgenome/
 - Docker: https://www.docker.com
 
 ## Automation Pipeline
-- "run_hdr.sh" is a pipeline which does following processes:
+- "hdr.sh" is a pipeline which does following processes:
   - vcftable.pl
   - findrun.pl
   - hdr.pl

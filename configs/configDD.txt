@@ -1,0 +1,17 @@
+#project
+$project	testDD
+root->project	$project
+$project->project#indir		testdata/input
+#configs
+$project->vcftable#qvThreshold	50
+$project->findrun#noIndel	F
+$project->findrun#stretchMode	hom
+$project->findrun#pickupNumber	1
+$project->findrun#regionSize	1000000
+$project->findrun#skipCount	0
+$project->hdr#targetMode	DD
+$project->hdr#excludeIndel	F
+$project->hdr#excludeLowQuality	F
+$project->annotation#genome->hg38
+hg19->chrominfo->annotation/hg19.genome
+hg38->chrominfo->annotation/hg38.genome

@@ -2,15 +2,56 @@
 use strict 'vars';
 use Cwd;
 use File::Basename;
-use IO::File;
+use File::Temp qw/tempfile tempdir/;
+use FileHandle;
 use Getopt::Std;
+use IO::File;
+use Time::localtime;
+############################## HEADER ##############################
+my ($program_name,$program_directory,$program_suffix)=fileparse($0);
+$program_directory=Cwd::abs_path($program_directory);
+my $program_path="$program_directory/$program_name";
+my $program_version="2022/08/15";
+############################## OPTIONS ##############################
 use vars qw($opt_b $opt_d $opt_f $opt_h $opt_m $opt_o $opt_p $opt_r $opt_s);
 getopts('bdfhm:o:p:r:s:');
-my ($prgname,$prgdir,$prgsuffix)=fileparse($0);
-if(defined($opt_h)||scalar(@ARGV)<2){help();exit(1);}
-my @caseFiles=@ARGV;
-my $tableFile=shift(@caseFiles);
-@caseFiles=listFiles("\\.([vb]cf|avinput)\$",@caseFiles);
+############################## HELP ##############################
+sub help{
+  print STDERR "\n";
+  print STDERR "Command: $program_name [option] TABLE CASE\n";
+  print STDERR "Arguments:\n";
+  print STDERR " TABLE  Table from vcftable.pl\n";
+  print STDERR "  CASE  Case file/directory\n";
+  print STDERR "Options:\n";
+  print STDERR "    -b  Output in BED format\n";
+  print STDERR "    -d  Exclude insertion/deletion\n";
+  print STDERR "    -f  Full option\n";
+  print STDERR "    -m  hom/het stretch (default=hom)\n";
+  print STDERR "    -o  Output directory (default='out')\n";
+  print STDERR "    -p  Pickup number (default>=1)\n";
+  print STDERR "    -r  Region size (default=1,000,000bp)\n";
+  print STDERR "    -s  Skip count (default=0)\n";
+  print STDERR "\n";
+  print STDERR "Author: akira.hasegawa\@riken.jp\n";
+  print STDERR "Update: $program_version\n";
+  print STDERR "\n";
+  print STDERR "Example: $program_name -b -d -f -m het -o output -p 2 -r 2000000 -s 2 fulltable.txt case\n";
+  print STDERR "  - Output in BED format\n";
+  print STDERR "  - Exclude indel from calculation\n";
+  print STDERR "  - Output in full format (additional length, hit and detail columns)\n";
+  print STDERR "  - het stretch mode\n";
+  print STDERR "  - Write files to output directory\n";
+  print STDERR "  - Needs at least two matches in between\n";
+  print STDERR "  - Region length have to be more than 2000000 bp\n";
+  print STDERR "  - Accept region upto two mismatch\n";
+  print STDERR "  - fulltable.txt from vcftable.pl output\n";
+  print STDERR "  - VCF files under case directory\n";
+}
+############################## MAIN ##############################
+if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
+elsif(defined($opt_h)||scalar(@ARGV)<2){help();exit();}
+my $tableFile=$ARGV[0];
+my @caseNames=split(/,/,$ARGV[1]);
 my $noindel=$opt_d;
 my $stretchMode=defined($opt_m)?lc($opt_m):"hom";
 my $outDir=defined($opt_o)?$opt_o:'out';
@@ -19,7 +60,7 @@ my $regionSize=defined($opt_r)?$opt_r:1000000;
 my $skipCount=defined($opt_s)?$opt_s:0;
 my $bedformat=$opt_b;
 my $fullMode=$opt_f;
-if(scalar(@caseFiles)==0){
+if(scalar(@caseNames)==0){
   print STDERR "\n";
   print STDERR "ERROR  No VCF files were found.\n";
   print STDERR "ERROR  Make sure you specify correct CASE file(s)/directory in the command line.\n";
@@ -35,7 +76,7 @@ if(!-e $tableFile){
 }
 mkdir($outDir);
 my ($handler,$labels)=openTable($tableFile);
-my $writers=matchIndex(\@caseFiles,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$regionSize,$skipCount,$fullMode,$bedformat);
+my $writers=matchIndex(\@caseNames,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$regionSize,$skipCount,$fullMode,$bedformat);
 my $regionCount=0;
 while(!eof($handler->[0])){
   checkRegion(nextTable($handler,$noindel),$writers,$stretchMode,$pickupNumber,$regionSize,$skipCount,$fullMode,$bedformat);
@@ -116,37 +157,19 @@ sub checkRegion{
     }
   }
 }
-############################## help ##############################
-sub help{
-  print STDERR "\n";
-  print STDERR "Command: $prgname [option] TABLE CASE\n";
-  print STDERR "Arguments:\n";
-  print STDERR " TABLE  Table from vcftable.pl\n";
-  print STDERR "  CASE  Case file/directory\n";
-  print STDERR "Options:\n";
-  print STDERR "    -b  Output in BED format\n";
-  print STDERR "    -d  Exclude insertion/deletion\n";
-  print STDERR "    -f  Full option\n";
-  print STDERR "    -m  hom/het stretch (default=hom)\n";
-  print STDERR "    -o  Output directory (default='out')\n";
-  print STDERR "    -p  Pickup number (default>=1)\n";
-  print STDERR "    -r  Region size (default=1,000,000bp)\n";
-  print STDERR "    -s  Skip count (default=0)\n";
-  print STDERR "\n";
-  print STDERR "Author: akira.hasegawa\@riken.jp\n";
-  print STDERR "Update: 2021/06/17\n";
-  print STDERR "\n";
-  print STDERR "Example: $prgname -b -d -f -m het -o output -p 2 -r 2000000 -s 2 fulltable.txt case\n";
-  print STDERR "  - Output in BED format\n";
-  print STDERR "  - Exclude indel from calculation\n";
-  print STDERR "  - Output in full format (additional length, hit and detail columns)\n";
-  print STDERR "  - het stretch mode\n";
-  print STDERR "  - Write files to output directory\n";
-  print STDERR "  - Needs at least two matches in between\n";
-  print STDERR "  - Region length have to be more than 2000000 bp\n";
-  print STDERR "  - Accept region upto two mismatch\n";
-  print STDERR "  - fulltable.txt from vcftable.pl output\n";
-  print STDERR "  - VCF files under case directory\n";
+############################## getDate ##############################
+sub getDate{
+	my $delim=shift();
+	my $time=shift();
+	if(!defined($delim)){$delim="";}
+	if(!defined($time)||$time eq ""){$time=localtime();}
+	else{$time=localtime($time);}
+	my $year=$time->year+1900;
+	my $month=$time->mon+1;
+	if($month<10){$month="0".$month;}
+	my $day=$time->mday;
+	if($day<10){$day="0".$day;}
+	return $year.$delim.$month.$delim.$day;
 }
 ############################## listFiles ##############################
 sub listFiles{
@@ -170,6 +193,16 @@ sub listFiles{
 		closedir(DIR);
 	}
 	return sort(@input_files);
+}
+############################## getBasename ##############################
+sub getBasename{
+  my $file=shift();
+  my $basename=basename($file);
+  if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
+  return $basename;
 }
 ############################## matchIndex ##############################
 sub matchIndex{
@@ -234,6 +267,21 @@ sub nextTable{
   if(eof($reader)){close($reader);$handler->[1]=undef;}
   return \@positions;
 }
+############################## openFile ##############################
+sub openFile{
+	my $path=shift();
+	if($path=~/^(.+\@.+)\:(.+)$/){
+		if($path=~/\.gz(ip)?$/){return IO::File->new("ssh $1 'gzip -cd $2'|");}
+		elsif($path=~/\.bz(ip)?2$/){return IO::File->new("ssh $1 'bzip2 -cd $2'|");}
+		elsif($path=~/\.bam$/){return IO::File->new("ssh $1 'samtools view $2'|");}
+		else{return IO::File->new("ssh $1 'cat $2'|");}
+	}else{
+		if($path=~/\.gz(ip)?$/){return IO::File->new("gzip -cd $path|");}
+		elsif($path=~/\.bz(ip)?2$/){return IO::File->new("bzip2 -cd $path|");}
+		elsif($path=~/\.bam$/){return IO::File->new("samtools view $path|");}
+		else{return IO::File->new($path);}
+	}
+}
 ############################## openTable ##############################
 sub openTable{
   my $file=shift();
@@ -292,4 +340,40 @@ sub printTableSub{
 		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
 	}
 	return wantarray?@output:$output[0];
+}
+############################## sortSubs ##############################
+sub sortSubs{
+	my $path="$program_directory/$program_name";
+	my $reader=openFile($path);
+	my @headers=();
+	my $name;
+	my $blocks={};
+	my $block=[];
+	my $date=getDate("/");
+	my @orders=();
+	while(<$reader>){
+		chomp;s/\r//g;
+		if(/^#{30}\s*(\S+)\s*#{30}$/){
+			$name=$1;
+			if($name!~/^[A-Z]+$/){push(@{$block},$_);last;}
+		}elsif(/^my \$program_version=\"\S+\";/){$_="my \$program_version=\"$date\";";}
+		push(@headers,$_);
+	}
+	while(<$reader>){
+		chomp;s/\r//g;
+		if(/^#{30}\s*(\S+)\s*#{30}$/){
+			$blocks->{$name}=$block;
+			push(@orders,$name);
+			$name=$1;
+			$block=[];
+		}
+		push(@{$block},$_);
+	}
+	close($reader);
+	if(defined($name)){$blocks->{$name}=$block;push(@orders,$name);}
+	my ($writer,$file)=tempfile(DIR=>"/tmp",SUFFIX=>".pl");
+	foreach my $line(@headers){print $writer "$line\n";}
+	foreach my $key(sort{$a cmp $b}@orders){foreach my $line(@{$blocks->{$key}}){print $writer "$line\n";}}
+	close($writer);
+	return system("mv $file $path");
 }
