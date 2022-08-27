@@ -1,0 +1,8 @@
+NA18939_v2	log	testDD3/log/genomecov.NA18939_v2.txt
+NA18939_v2	testDD3/genomecov/NA18939_v2.hom_region10000_top10.txt
+NA18940_v2	log	testDD3/log/genomecov.NA18940_v2.txt
+NA18940_v2	testDD3/genomecov/NA18940_v2.hom_region10000_top10.txt
+NA18941_v2	log	testDD3/log/genomecov.NA18941_v2.txt
+NA18941_v2	testDD3/genomecov/NA18941_v2.hom_region10000_top10.txt
+NA18942_v2	log	testDD3/log/genomecov.NA18942_v2.txt
+NA18942_v2	testDD3/genomecov/NA18942_v2.hom_region10000_top10.txt

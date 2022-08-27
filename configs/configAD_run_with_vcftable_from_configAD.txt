@@ -2,16 +2,25 @@
 $project	testAD2
 root->project	$project
 $project->project#indir		testdata/input
-$project->vcftable	testAD/vcftable.txt
 $project->project#positiondir	testdata/position
-#configs
+
+#vcftable setting
 $project->vcftable#qvThreshold	50
+root->$project/vcftable	testAD/vcftable.txt
+
+#hdr setting
 $project->hdr#targetMode	AD
 $project->hdr#excludeIndel	F
 $project->hdr#excludeLowQuality	F
 $project->hdr#startDistance	10
 $project->hdr#endDistance	50
 $project->hdr#interval	10
+
+#annotation setting
 $project->annotation#genome->hg38
-hg19->chrominfo->annotation/hg19.genome
-hg38->chrominfo->annotation/hg38.genome
+hg19->cytoband	annotation/hg19.cytoband.bed
+hg38->cytoband	annotation/hg38.cytoband.bed
+hg19->chrominfo	annotation/hg19.chrom.sizes
+hg38->chrominfo	annotation/hg38.chrom.sizes
+hg19->gencode	annotation/hg19.gencode.bed
+hg38->gencode	annotation/hg38.gencode.bed

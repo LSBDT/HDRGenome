@@ -11,10 +11,10 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/15";
+my $program_version="2022/08/27";
 ############################## OPTIONS ##############################
-use vars qw($opt_h $opt_o);
-getopts('ho:');
+use vars qw($opt_a $opt_b $opt_h $opt_o);
+getopts('a:b:ho:');
 ############################## HELP ##############################
 sub help{
 	print "\n";
@@ -36,23 +36,14 @@ elsif(defined($opt_h)||scalar(@ARGV)<1){help();exit();}
 my @inputs=@ARGV;
 my @regionSizes=();#for AR/D mode,
 my $outdir=(defined($opt_o))?$opt_o:"out";
+my $val1=defined($opt_a)?$opt_a:0.5;
+my $val2=defined($opt_b)?$opt_b:0.8;
 mkdir($outdir);
 @inputs=listFiles(".txt",@inputs);
 my $result=`uname`;
 my $os=($result=~/Darwin/)?"mac":"linux";
 foreach my $input(@inputs){
-	my ($tmpInput,$program)=prepareInput($input);
-	my $tmpOutput=prepareOutput();
-	my $output="$outdir/".basename($input,".txt").".out";
-	my $param=($program eq "statdel")?prepareParamStatdel($tmpInput,$tmpOutput):prepareParamMaxstatRS($tmpInput,$tmpOutput);
-	print STDERR "Input file: $input\n";
-	print STDERR "Temporary input: $tmpInput\n";
-	print STDERR "Parameter file: $param\n";
-	print STDERR "Temporary output: $tmpOutput\n";
-	print STDERR "Output file: $output\n";
-	print STDERR "Command: $program_directory/$os/$program\n";
-	system("$program_directory/$os/$program $param");
-	handleOutput($tmpOutput,$output);
+	for(my $i=3;$i>=0;$i--){if(runProgram($input,$i,$val1,$val2)){last;}}
 }
 ############################## absolutePath ##############################
 sub absolutePath {
@@ -249,11 +240,14 @@ sub prepareParamMaxstatRS{
 sub prepareParamStatdel{
 	my $input=shift();
 	my $output=shift();
+	my $val1=shift();
+	my $val2=shift();
+	my $val3=shift();
 	my ($writer,$tmp)=tempfile();#UNLINK=>1
 	print $writer "Statdel: Auto generated parameter file\n";
 	print $writer "-9 0 0 0\n";
 	print $writer "-12 1 1\n";
-	print $writer "1 3 0.5 0.8\n";
+	print $writer "1 $val1 $val2 $val3\n";
 	print $writer "$input\n";
 	print $writer "$output\n";
 	close($writer);
@@ -301,6 +295,48 @@ sub printTableSub{
 		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
 	}
 	return wantarray?@output:$output[0];
+}
+############################## runProgram ##############################
+sub runProgram{
+	my $input=shift();
+	my $val1=shift();
+	my $val2=shift();
+	my $val3=shift();
+	my ($tmpInput,$program)=prepareInput($input);
+	my $tmpOutput=prepareOutput();
+	my $param=($program eq "statdel")?prepareParamStatdel($tmpInput,$tmpOutput,$val1,$val2,$val3):prepareParamMaxstatRS($tmpInput,$tmpOutput);
+	my ($writer,$tmpfile)=tempfile();
+	close($writer);
+	system("$program_directory/$os/$program $param > $tmpfile 2>&1");
+	my $reader=openFile($tmpOutput);
+	my $noresult=0;
+	while(<$reader>){if(/Note: No results/){if($val1>0){$noresult=1;last;}}}
+	close($reader);
+	if($noresult){unlink($param);unlink($tmpInput);unlink($tmpOutput);return;}
+	my $output="$outdir/".basename($input,".txt").".out";
+	print STDERR "==================== setting ====================\n";
+	print STDERR "Command: $program_directory/$os/$program\n";
+	print STDERR "Input file: $input\n";
+	print STDERR "Temporary input: $tmpInput\n";
+	print STDERR "Parameter file: $param\n";
+	print STDERR "Output file: $output\n";
+	print STDERR "==================== input file ====================\n";
+	my $reader=openFile($tmpInput);
+	while(<$reader>){chomp;print STDERR "$_\n";}
+	close($reader);
+	print STDERR "==================== param file ====================\n";
+	$reader=openFile($param);
+	while(<$reader>){chomp;print STDERR "$_\n";}
+	close($reader);
+	print STDERR "==================== $program log ====================\n";
+	$reader=openFile($tmpfile);
+	while(<$reader>){chomp;print STDERR "$_\n";}
+	close($reader);
+	handleOutput($tmpOutput,$output);
+	unlink($param);
+	unlink($tmpInput);
+	unlink($tmpOutput);
+	return 1;
 }
 ############################## sortSubs ##############################
 sub sortSubs{

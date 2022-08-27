@@ -1,0 +1,27 @@
+#project
+$project	testDD2
+root->project	$project
+$project->project#indir		testdata/input
+
+#vcftable setting
+$project->vcftable#qvThreshold	50
+
+#genomecov setting
+$project->genomecov#noIndel	F
+$project->genomecov#regionSize	10000
+$project->genomecov#stretchMode	hom
+$project->genomecov#topX	10
+
+#hdr setting
+$project->hdr#targetMode	DD
+$project->hdr#excludeIndel	F
+$project->hdr#excludeLowQuality	F
+
+#annotation setting
+$project->annotation#genome->hg38
+hg19->cytoband	annotation/hg19.cytoband.bed
+hg38->cytoband	annotation/hg38.cytoband.bed
+hg19->chrominfo	annotation/hg19.chrom.sizes
+hg38->chrominfo	annotation/hg38.chrom.sizes
+hg19->gencode	annotation/hg19.gencode.bed
+hg38->gencode	annotation/hg38.gencode.bed

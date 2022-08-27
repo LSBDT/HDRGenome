@@ -1,0 +1,4 @@
+testDD3	noIndel	F
+testDD3	regionSize	10000
+testDD3	stretchMode	hom
+testDD3	topX	10

@@ -1,0 +1,4 @@
+NA18939_v2	testdata/input/NA18939_v2.vcf
+NA18940_v2	testdata/input/NA18940_v2.vcf
+NA18941_v2	testdata/input/NA18941_v2.vcf
+NA18942_v2	testdata/input/NA18942_v2.vcf

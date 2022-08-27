@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/15";
+my $program_version="2022/08/27";
 ############################## OPTIONS ##############################
 use vars qw($opt_d $opt_h $opt_m $opt_o $opt_r $opt_t);
 getopts('dhm:o:r:t:');
@@ -49,76 +49,12 @@ my $bedfile=createBed($tableFile,$basename,$genomeFile,$noIndel,$stretchMode,$re
 my $groups=groupByDepth($bedfile);
 my $writer=fileWriter($opt_o,$basename,$noIndel,$stretchMode,$regionSize,$topX);
 pickTopX($writer,$topX,$groups);
-############################## fileWriter ##############################
-sub fileWriter{
-  my $outdir=shift();
-  my $basename=shift();
-  my $noIndel=shift();
-  my $stretchMode=shift();
-  my $regionSize=shift();
-  my $topX=shift();
-  if(!defined($outdir)){return IO::File->new( ">&STDOUT" );}
-  mkdir($outdir);
-  my $filename="$outdir/$basename.${stretchMode}_region${regionSize}_top${topX}";
-  if(defined($noIndel)){$filename.="_noindel";}
-  $filename.=".txt";
-  return IO::File->new(">$filename");
-}
-############################## pickTopX ##############################
-sub pickTopX{
-  my $writer=shift();
-  my $topX=shift();
-  my $groups=shift();
-  my $outdir=shift();
-  my $hash={};
-  for(my $i=0;$i<scalar(@{$groups});$i++){
-    my ($chr,$start,$end,$depth)=@{$groups->[$i]};
-    push(@{$hash->{$depth}},$i);
-  }
-  my ($fh,$tmpfile)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".bed");
-  my @keys=sort{$b<=>$a}keys(%{$hash});
-  my $total=0;
-  foreach my $key(@keys){
-    my @indeces=@{$hash->{$key}};
-    foreach my $index(@indeces){
-      my $group=$groups->[$index];
-      print $fh join("\t",@{$group})."\n";
-    }
-    $total+=scalar(@indeces);
-    if($total>=$topX){last;}
-  }
-  close($fh);
-  my ($fh2,$tmpfile2)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".bed");
-  close($fh2);
-  system("sort -k1,1 -k2,2n -k3,3n $tmpfile > $tmpfile2");
-  my $reader=openFile($tmpfile2);
-  print $writer "#Chr\tStart\tEnd\tDepth\n";
-  while(<$reader>){chomp;print $writer "$_\n";}
-  close($reader);
-  close($writer);
-}
-############################## getBasename ##############################
-sub getBasename{
-  my $file=shift();
-  my $basename=basename($file);
-  if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
-  return $basename;
-}
-############################## getColumnIndex ##############################
-sub getColumnIndex{
-  my $reader=shift();
-  my $basename=shift();
-  my $line=<$reader>;
-  chomp($line);
-  my @tokens=split(/\t/,$line);
-  my $index=-1;
-  for(my $i=0;$i<scalar(@tokens);$i++){
-    if($tokens[$i]eq$basename){$index=$i;}
-  }
-  return $index;
+############################## absolutePath ##############################
+sub absolutePath{
+	my $path=shift();
+	my $directory=dirname($path);
+	my $filename=basename($path);
+	return Cwd::abs_path($directory)."/$filename";
 }
 ############################## createBed ##############################
 sub createBed{
@@ -159,6 +95,58 @@ sub createBed{
   unlink($tmpfile2);
   return $tmpfile3;
 }
+############################## fileWriter ##############################
+sub fileWriter{
+  my $outdir=shift();
+  my $basename=shift();
+  my $noIndel=shift();
+  my $stretchMode=shift();
+  my $regionSize=shift();
+  my $topX=shift();
+  if(!defined($outdir)){return IO::File->new(">&STDOUT");}
+  mkdir($outdir);
+  my $filename="$outdir/$basename.${stretchMode}_region${regionSize}_top${topX}";
+  if(defined($noIndel)){$filename.="_noindel";}
+  $filename.=".txt";
+  return IO::File->new(">$filename");
+}
+############################## getBasename ##############################
+sub getBasename{
+  my $file=shift();
+  my $basename=basename($file);
+  if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
+  return $basename;
+}
+############################## getColumnIndex ##############################
+sub getColumnIndex{
+  my $reader=shift();
+  my $basename=shift();
+  my $line=<$reader>;
+  chomp($line);
+  my @tokens=split(/\t/,$line);
+  my $index=-1;
+  for(my $i=0;$i<scalar(@tokens);$i++){
+    if($tokens[$i]eq$basename){$index=$i;}
+  }
+  return $index;
+}
+############################## getDate ##############################
+sub getDate{
+	my $delim=shift();
+	my $time=shift();
+	if(!defined($delim)){$delim="";}
+	if(!defined($time)||$time eq ""){$time=localtime();}
+	else{$time=localtime($time);}
+	my $year=$time->year+1900;
+	my $month=$time->mon+1;
+	if($month<10){$month="0".$month;}
+	my $day=$time->mday;
+	if($day<10){$day="0".$day;}
+	return $year.$delim.$month.$delim.$day;
+}
 ############################## groupByDepth ##############################
 sub groupByDepth{
   my $file=shift();
@@ -194,27 +182,6 @@ sub groupByDepth{
   if(defined($currentChr)&&$currentDepth>1){push(@array,[$currentChr,$currentStart,$currentEnd,$currentDepth]);}
   close($reader);
   return \@array;
-}
-############################## absolutePath ##############################
-sub absolutePath{
-	my $path=shift();
-	my $directory=dirname($path);
-	my $filename=basename($path);
-	return Cwd::abs_path($directory)."/$filename";
-}
-############################## getDate ##############################
-sub getDate{
-	my $delim=shift();
-	my $time=shift();
-	if(!defined($delim)){$delim="";}
-	if(!defined($time)||$time eq ""){$time=localtime();}
-	else{$time=localtime($time);}
-	my $year=$time->year+1900;
-	my $month=$time->mon+1;
-	if($month<10){$month="0".$month;}
-	my $day=$time->mday;
-	if($day<10){$day="0".$day;}
-	return $year.$delim.$month.$delim.$day;
 }
 ############################## listFiles ##############################
 sub listFiles{
@@ -253,6 +220,39 @@ sub openFile{
 		elsif($path=~/\.bam$/){return IO::File->new("samtools view $path|");}
 		else{return IO::File->new($path);}
 	}
+}
+############################## pickTopX ##############################
+sub pickTopX{
+  my $writer=shift();
+  my $topX=shift();
+  my $groups=shift();
+  my $outdir=shift();
+  my $hash={};
+  for(my $i=0;$i<scalar(@{$groups});$i++){
+    my ($chr,$start,$end,$depth)=@{$groups->[$i]};
+    push(@{$hash->{$depth}},$i);
+  }
+  my ($fh,$tmpfile)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".bed");
+  my @keys=sort{$b<=>$a}keys(%{$hash});
+  my $total=0;
+  foreach my $key(@keys){
+    my @indeces=@{$hash->{$key}};
+    foreach my $index(@indeces){
+      my $group=$groups->[$index];
+      print $fh join("\t",@{$group})."\n";
+    }
+    $total+=scalar(@indeces);
+    if($total>=$topX){last;}
+  }
+  close($fh);
+  my ($fh2,$tmpfile2)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".bed");
+  close($fh2);
+  system("sort -k1,1 -k2,2n -k3,3n $tmpfile > $tmpfile2");
+  my $reader=openFile($tmpfile2);
+  print $writer "#Chr\tStart\tEnd\tDepth\n";
+  while(<$reader>){chomp;print $writer "$_\n";}
+  close($reader);
+  close($writer);
 }
 ############################## printTable ##############################
 sub printTable{

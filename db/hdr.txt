@@ -1,0 +1,3 @@
+testDD3	excludeIndel	F
+testDD3	excludeLowQuality	F
+testDD3	targetMode	DD

@@ -40,5 +40,6 @@ $project->hdr#targetMode	DD
 $project->hdr#excludeIndel	F
 $project->hdr#excludeLowQuality	F
 $project->annotation#genome->hg38
-hg19->chrominfo->annotation/hg19.genome
-hg38->chrominfo->annotation/hg38.genome
+#genomes
+root->genome	hg19
+root->genome	hg38

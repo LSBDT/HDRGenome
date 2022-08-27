@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/15";
+my $program_version="2022/08/27";
 ############################## OPTIONS ##############################
 use vars qw($opt_d $opt_e $opt_h $opt_i $opt_l $opt_o $opt_s $opt_t);
 getopts('de:hi:lo:s:t:');
@@ -47,60 +47,6 @@ sub help{
   print STDERR "Update: $program_version\n";
   exit(1);
 }
-############################## retrieveCtrlNamesFromTable ##############################
-sub retrieveCtrlNamesFromTable{
-  my $tableFile=shift();
-  my $reader=openFile($tableFile);
-  my $line=<$reader>;
-  close($reader);
-  chomp($line);
-  my @names=split(/\t/,$line);
-  shift(@names);shift(@names);
-  return \@names;
-}
-############################## printTable ##############################
-sub printTable{
-	my @out=@_;
-	my $return_type=$out[0];
-	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
-	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
-	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
-	else{$return_type= 2;}
-	printTableSub($return_type,"",@out);
-}
-sub printTableSub{
-	my @out=@_;
-	my $return_type=shift(@out);
-	my $string=shift(@out);
-	my @output=();
-	for(@out){
-		if(ref($_)eq"ARRAY"){
-			my @array=@{$_};
-			my $size=scalar(@array);
-			if($size==0){
-				if($return_type==0){print $string."[]\n";}
-				elsif($return_type==1){push(@output,$string."[]");}
-				elsif($return_type==2){print STDERR $string."[]\n";}
-			}else{
-				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
-			}
-		} elsif(ref($_)eq"HASH"){
-			my %hash=%{$_};
-			my @keys=sort{$a cmp $b}keys(%hash);
-			my $size=scalar(@keys);
-			if($size==0){
-				if($return_type==0){print $string."{}\n";}
-				elsif($return_type==1){push( @output,$string."{}");}
-				elsif($return_type==2){print STDERR $string."{}\n";}
-			}else{
-				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
-			}
-		}elsif($return_type==0){print "$string\"$_\"\n";}
-		elsif($return_type==1){push( @output,"$string\"$_\"");}
-		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
-	}
-	return wantarray?@output:$output[0];
-}
 ############################## MAIN ##############################
 if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
 elsif(defined($opt_h)||scalar(@ARGV)<3){help();exit();}
@@ -109,7 +55,7 @@ my $caseNames=[split(/,/,$ARGV[1])];
 my @posFiles=listFiles("\\.te?xt\$",$ARGV[2]);
 my $ctrlNames=retrieveCtrlNamesFromTable($tableFile);
 $ctrlNames=removeCaseFromCtrl($caseNames,$ctrlNames);
-print STDERR "########## Setting ##########\n";
+print STDERR "==================== setting ====================\n";
 if(scalar(@{$caseNames})==0){
   print STDERR "ERROR  Number of case file is 0.";
   print STDERR "ERROR  Make sure you specify correct case files in the command line.\n";
@@ -143,8 +89,8 @@ my $windowStart=(defined($opt_s))?$opt_s:10;
 my $windowEnd=(defined($opt_e))?$opt_e:50;
 mkdir($outdir);
 print STDERR "Output directory: $outdir\n";
-print STDERR "No indel: $noindel\n";
-print STDERR "No low quality: $nolowqc\n";
+if(defined($noindel)){print STDERR "Include indel:false\n";}else{print STDERR "Include indel:true\n";}
+if(defined($nolowqc)){print STDERR "Include low quality: false\n";}else{print STDERR "Include low quality: true\n";}
 print STDERR "Target mode: $targetMode\n";
 print STDERR "Window interval: $windowInterval\n";
 print STDERR "Window start: $windowStart\n";
@@ -187,7 +133,7 @@ sub calculateHDR{
   my $windowStart=shift();
   my $windowEnd=shift();
   my $windowInterval=shift();
-  print STDERR "########## $outputFile ##########\n";
+	print STDERR "==================== $outputFile ====================\n";
   my ($fh,$tmpfile)=tempfile(DIR=>$outdir,TEMPLATE=>'hdrXXXXXX',SUFFIX=>'.txt');
   print STDERR "Calculating position: $tmpfile\n";
   my $handler=openTable($tableFile,$matchNames);
@@ -559,6 +505,49 @@ sub openTable{
   my @tokens=split(/\t/,$line);
   return [$reader,\@tokens];
 }
+############################## printTable ##############################
+sub printTable{
+	my @out=@_;
+	my $return_type=$out[0];
+	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
+	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
+	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
+	else{$return_type= 2;}
+	printTableSub($return_type,"",@out);
+}
+sub printTableSub{
+	my @out=@_;
+	my $return_type=shift(@out);
+	my $string=shift(@out);
+	my @output=();
+	for(@out){
+		if(ref($_)eq"ARRAY"){
+			my @array=@{$_};
+			my $size=scalar(@array);
+			if($size==0){
+				if($return_type==0){print $string."[]\n";}
+				elsif($return_type==1){push(@output,$string."[]");}
+				elsif($return_type==2){print STDERR $string."[]\n";}
+			}else{
+				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
+			}
+		} elsif(ref($_)eq"HASH"){
+			my %hash=%{$_};
+			my @keys=sort{$a cmp $b}keys(%hash);
+			my $size=scalar(@keys);
+			if($size==0){
+				if($return_type==0){print $string."{}\n";}
+				elsif($return_type==1){push( @output,$string."{}");}
+				elsif($return_type==2){print STDERR $string."{}\n";}
+			}else{
+				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
+			}
+		}elsif($return_type==0){print "$string\"$_\"\n";}
+		elsif($return_type==1){push( @output,"$string\"$_\"");}
+		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
+	}
+	return wantarray?@output:$output[0];
+}
 ############################## removeCaseFromCtrl ##############################
 sub removeCaseFromCtrl{
   my $cases=shift();
@@ -568,6 +557,17 @@ sub removeCaseFromCtrl{
   my @array=();
   foreach my $ctrl(@{$ctrls}){if(!exists($hash->{$ctrl})){push(@array,$ctrl);}}
   return \@array;
+}
+############################## retrieveCtrlNamesFromTable ##############################
+sub retrieveCtrlNamesFromTable{
+  my $tableFile=shift();
+  my $reader=openFile($tableFile);
+  my $line=<$reader>;
+  close($reader);
+  chomp($line);
+  my @names=split(/\t/,$line);
+  shift(@names);shift(@names);
+  return \@names;
 }
 ############################## sortSubs ##############################
 sub sortSubs{

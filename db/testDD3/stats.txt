@@ -1,0 +1,24 @@
+testDD3/hdr/NA18939_v2.hom_region1000000_pick1_skip0_dd.txt	log	testDD3/log/stats.NA18939_v2.hom_region1000000_pick1_skip0_dd.txt
+testDD3/hdr/NA18939_v2.hom_region1000000_pick1_skip0_dd.txt	testDD3/stats/NA18939_v2.hom_region1000000_pick1_skip0_dd.out
+testDD3/hdr/NA18939_v2.hom_region10000_top10_dd.txt	log	testDD3/log/stats.NA18939_v2.hom_region10000_top10_dd.txt
+testDD3/hdr/NA18939_v2.hom_region10000_top10_dd.txt	testDD3/stats/NA18939_v2.hom_region10000_top10_dd.out
+testDD3/hdr/NA18940_v2.hom_region1000000_pick1_skip0_dd.txt	log	testDD3/log/stats.NA18940_v2.hom_region1000000_pick1_skip0_dd.txt
+testDD3/hdr/NA18940_v2.hom_region1000000_pick1_skip0_dd.txt	testDD3/stats/NA18940_v2.hom_region1000000_pick1_skip0_dd.out
+testDD3/hdr/NA18940_v2.hom_region10000_top10_dd.txt	log	testDD3/log/stats.NA18940_v2.hom_region10000_top10_dd.txt
+testDD3/hdr/NA18940_v2.hom_region10000_top10_dd.txt	testDD3/stats/NA18940_v2.hom_region10000_top10_dd.out
+testDD3/hdr/NA18941_v2.hom_region1000000_pick1_skip0_dd.txt	log	testDD3/log/stats.NA18941_v2.hom_region1000000_pick1_skip0_dd.txt
+testDD3/hdr/NA18941_v2.hom_region1000000_pick1_skip0_dd.txt	testDD3/stats/NA18941_v2.hom_region1000000_pick1_skip0_dd.out
+testDD3/hdr/NA18941_v2.hom_region10000_top10_dd.txt	log	testDD3/log/stats.NA18941_v2.hom_region10000_top10_dd.txt
+testDD3/hdr/NA18941_v2.hom_region10000_top10_dd.txt	testDD3/stats/NA18941_v2.hom_region10000_top10_dd.out
+testDD3/hdr/NA18942_v2.hom_region1000000_pick1_skip0_dd.txt	log	testDD3/log/stats.NA18942_v2.hom_region1000000_pick1_skip0_dd.txt
+testDD3/hdr/NA18942_v2.hom_region1000000_pick1_skip0_dd.txt	testDD3/stats/NA18942_v2.hom_region1000000_pick1_skip0_dd.out
+testDD3/hdr/NA18942_v2.hom_region10000_top10_dd.txt	log	testDD3/log/stats.NA18942_v2.hom_region10000_top10_dd.txt
+testDD3/hdr/NA18942_v2.hom_region10000_top10_dd.txt	testDD3/stats/NA18942_v2.hom_region10000_top10_dd.out
+testDD3/stats/NA18939_v2.hom_region1000000_pick1_skip0_dd.out	html	testDD3/html/NA18939_v2.hom_region1000000_pick1_skip0_dd.html
+testDD3/stats/NA18939_v2.hom_region10000_top10_dd.out	html	testDD3/html/NA18939_v2.hom_region10000_top10_dd.html
+testDD3/stats/NA18940_v2.hom_region1000000_pick1_skip0_dd.out	html	testDD3/html/NA18940_v2.hom_region1000000_pick1_skip0_dd.html
+testDD3/stats/NA18940_v2.hom_region10000_top10_dd.out	html	testDD3/html/NA18940_v2.hom_region10000_top10_dd.html
+testDD3/stats/NA18941_v2.hom_region1000000_pick1_skip0_dd.out	html	testDD3/html/NA18941_v2.hom_region1000000_pick1_skip0_dd.html
+testDD3/stats/NA18941_v2.hom_region10000_top10_dd.out	html	testDD3/html/NA18941_v2.hom_region10000_top10_dd.html
+testDD3/stats/NA18942_v2.hom_region1000000_pick1_skip0_dd.out	html	testDD3/html/NA18942_v2.hom_region1000000_pick1_skip0_dd.html
+testDD3/stats/NA18942_v2.hom_region10000_top10_dd.out	html	testDD3/html/NA18942_v2.hom_region10000_top10_dd.html

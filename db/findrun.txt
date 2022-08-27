@@ -1,0 +1,5 @@
+testDD3	noIndel	F
+testDD3	pickupNumber	1
+testDD3	regionSize	1000000
+testDD3	skipCount	0
+testDD3	stretchMode	hom

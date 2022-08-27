@@ -1,2 +1,2 @@
-hg19	annotation/hg19.genome
-hg38	annotation/hg38.genome
+hg19	annotation/hg19.chrom.sizes
+hg38	annotation/hg38.chrom.sizes

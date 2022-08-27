@@ -1,0 +1,2 @@
+root	log	testDD3/log/vcftable.txt
+root	testDD3/vcftable.txt

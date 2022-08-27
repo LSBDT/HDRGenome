@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/15";
+my $program_version="2022/08/27";
 ############################## OPTIONS ##############################
 use vars qw($opt_h $opt_o $opt_q $opt_t);
 getopts('ho:qt:');
