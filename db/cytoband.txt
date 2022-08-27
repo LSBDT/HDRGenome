@@ -1,2 +1,0 @@
-hg19	annotation/hg19.cytoband.bed
-hg38	annotation/hg38.cytoband.bed

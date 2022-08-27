@@ -1,4 +1,0 @@
-root	NA18939_v2
-root	NA18940_v2
-root	NA18941_v2
-root	NA18942_v2
