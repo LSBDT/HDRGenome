@@ -56,8 +56,8 @@ sub findClosest{
 	my $genomeFile=shift();
 	my ($fh,$tmpfile)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".txt");
 	close($fh);
-	system("bedtools closest -g $genomeFile -d -a $bedA -b $bedB>$tmpfile");
-	#system("cat $tmpfile");
+	#system("bedtools closest -g $genomeFile -d -a $bedA -b $bedB>$tmpfile");
+	system("bedtools closest -g $genomeFile -D -a $bedA -b $bedB>$tmpfile");
 	my $reader=openFile($tmpfile);
 	while(<$reader>){
 		chomp;
