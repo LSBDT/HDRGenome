@@ -1,29 +1,29 @@
-######################################## e202208271731341fF6 ########################################
-.moirai2/cmd/j20220827173134WSjj.json#project	testDD3
-https://moirai2.github.io/schema/daemon/command	.moirai2/cmd/j20220827173134WSjj.json
-https://moirai2.github.io/schema/daemon/execid	e202208271731341fF6
+######################################## e20221222134040xyA3 ########################################
+.moirai2/cmd/j20221222134040vWnU.json#project	testAD
+https://moirai2.github.io/schema/daemon/command	.moirai2/cmd/j20221222134040vWnU.json
+https://moirai2.github.io/schema/daemon/execid	e20221222134040xyA3
 https://moirai2.github.io/schema/daemon/execute	completed
 https://moirai2.github.io/schema/daemon/processtime	0
 https://moirai2.github.io/schema/daemon/rootdir	/Users/ah3q/Sites/github/HDRGenome
-https://moirai2.github.io/schema/daemon/timecompleted	1661589096
-https://moirai2.github.io/schema/daemon/timeended	1661589096
-https://moirai2.github.io/schema/daemon/timeregistered	1661589095
-https://moirai2.github.io/schema/daemon/timestarted	1661589096
-https://moirai2.github.io/schema/daemon/workdir	.moirai2/e202208271731341fF6
+https://moirai2.github.io/schema/daemon/timecompleted	1671684041
+https://moirai2.github.io/schema/daemon/timeended	1671684041
+https://moirai2.github.io/schema/daemon/timeregistered	1671684041
+https://moirai2.github.io/schema/daemon/timestarted	1671684041
+https://moirai2.github.io/schema/daemon/workdir	.moirai2/e20221222134040xyA3
 ######################################## time ########################################
-registered	2022/08/27 17:31:35
-start	2022/08/27 17:31:36
-end	2022/08/27 17:31:36
-completed	2022/08/27 17:31:36
+registered	2022/12/22 13:40:41
+start	2022/12/22 13:40:41
+end	2022/12/22 13:40:41
+completed	2022/12/22 13:40:41
 ######################################## bash ########################################
 #!/bin/sh
 export PATH=/Users/ah3q/Sites/github/HDRGenome:/Users/ah3q/Sites/github/HDRGenome/bin:/Users/ah3q/Sites/github/HDRGenome/.moirai2/bin:$PATH
-cmdurl=".moirai2/cmd/j20220827173134WSjj.json"
-execid="e202208271731341fF6"
-workdir=".moirai2/e202208271731341fF6"
+cmdurl=".moirai2/cmd/j20221222134040vWnU.json"
+execid="e20221222134040xyA3"
+workdir=".moirai2/e20221222134040xyA3"
 rootdir="/Users/ah3q/Sites/github/HDRGenome"
-jobfile=".moirai2/ctrl/job/e202208271731341fF6.txt"
-project="testDD3"
+jobfile=".moirai2/ctrl/job/e20221222134040xyA3.txt"
+project="testAD"
 ########## init ##########
 cd $rootdir
 touch $workdir/status.txt

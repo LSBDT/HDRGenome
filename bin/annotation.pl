@@ -56,8 +56,7 @@ sub findClosest{
 	my $genomeFile=shift();
 	my ($fh,$tmpfile)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".txt");
 	close($fh);
-	#system("bedtools closest -g $genomeFile -d -a $bedA -b $bedB>$tmpfile");
-	system("bedtools closest -g $genomeFile -D -a $bedA -b $bedB>$tmpfile");
+	system("bedtools closest -g $genomeFile -D ref -a $bedA -b $bedB>$tmpfile");
 	my $reader=openFile($tmpfile);
 	while(<$reader>){
 		chomp;
@@ -95,18 +94,18 @@ sub intersectTelomere{
 	my ($fh,$tmpfile)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".txt");
 	close($fh);
 	system("bedtools intersect -a $bedA -b $bedB > $tmpfile");
-	#system("cat $tmpfile");
 	my $reader=openFile($tmpfile);
 	while(<$reader>){
 		chomp;
 		my @token=split(/\t/);
 		my $id=$token[3];
 		if($id=~/^id(\d+)$/){
-		$id=$1;
-		push(@{$results->[$id]->[13]},["telomere",0]);
+			$id=$1;
+			push(@{$results->[$id]->[13]},["telomere",0]);
 		}
 	}
 	close($reader);
+	unlink($tmpfile);
 }
 ############################## listFiles ##############################
 sub listFiles{
