@@ -36,11 +36,12 @@ my $telomereFile=shift(@ARGV);
 my $annotationFile=shift(@ARGV);
 my $genomeFile=shift(@ARGV);
 my $jsFile=shift(@ARGV);
+my $filename=basename($statsFile,".out");
 my $assembly=basename($genomeFile,".genome");
 my ($program,$bedFile,$results)=readStats($statsFile);
 intersectTelomere($results,$bedFile,$telomereFile);
 findClosest($results,$bedFile,$annotationFile,$genomeFile);
-printResult($results,$program,$assembly,$jsFile);
+printResult($results,$program,$assembly,$jsFile,$filename);
 ############################## absolutePath ##############################
 sub absolutePath{
 	my $path=shift();
@@ -145,12 +146,41 @@ sub openFile{
 		else{return IO::File->new($path);}
 	}
 }
+############################## getMetaDataFromFilename ##############################
+sub getMetaDataFromFilename{
+	my $filename=shift();
+	my $assembly=shift();
+	my @metadata=();
+	my ($name,$other)=split(/\./,$filename);
+	my ($target,@metas)=split(/_/,$other);
+	push(@metadata,"target:$target");
+	foreach my $meta(@metas){
+		if($meta=~/pick(\d+)/){push(@metadata,"pick hits >: $1");next;}
+		if($meta=~/skip(\d+)/){push(@metadata,"skip/mismatch: $1");next;}
+		if($meta=~/min(\d+)/){push(@metadata,"minimum region size: $1");next;}
+		if($meta=~/max(\d+)/){push(@metadata,"maximum region size: $1");next;}
+		if($meta=~/top(\d+)/){push(@metadata,"top region selected: $1");next;}
+		if($meta=~/full/){push(@metadata,"output in full mode");next;}
+		if($meta=~/noindel/){push(@metadata,"skipping insertion deletion");next;}
+		if($meta=~/dd/){push(@metadata,"HDR mode: DD");next;}
+		if($meta=~/ar/){push(@metadata,"HDR mode: AR");next;}
+		if($meta=~/ad/){push(@metadata,"HDR mode: AD");next;}
+	}
+	return ($name,@metadata);
+}
 ############################## printResult ##############################
 sub printResult{
 	my $results=shift();
 	my $program=shift();
 	my $assembly=shift();
 	my $jsFile=shift();
+	my $filename=shift();
+	if($assembly=~/^([^\.]+)\./){$assembly=$1;}
+	my ($name,@metadata)=getMetaDataFromFilename($filename);
+	print "<html>\n";
+	print "<head>\n";
+	print "<title>$name</title>\n";
+	print "</head>\n";
 	#https://neil.fraser.name/software/tablesort/
 	if(defined($jsFile)){
 		print "<script>\n";
@@ -161,6 +191,13 @@ sub printResult{
 	print "<style>\n";
 	print "table,td,th{border: 2px #000000 solid;}\n";
 	print "</style>\n";
+	print "<body>\n";
+	print "<h1>$name</h1>\n";
+	print "<ul>\n";
+	print "<li>program: $program</li>\n";
+	print "<li>assembly: $assembly</li>\n";
+	foreach my $meta(@metadata){print "<li>$meta</li>\n";}
+	print "</ul>\n";
 	print "<table>\n";
 	print "<thead>\n<tr><th class=\"num\">Group_1</th><th class=\"num\">Group_2</th><th class=\"num\">n1</th><th class=\"num\">n2</th><th class=\"num\">Teststat</th><th class=\"num\">n</th><th class=\"num\">p</th><th class=\"case\">genome</th><th class=\"case\">mH</th><th class=\"num\">rank</th><th class=\"num\">Line</th><th class=\"case\">annotation</th></tr>\n</thead>\n";
 	print "<tbody>\n";
@@ -191,8 +228,10 @@ sub printResult{
 		print "<td>$line</td>";
 		print "</tr>\n";
 	}
-	print "<tbody>\n";
-	print "<table>\n";
+	print "</tbody>\n";
+	print "</table>\n";
+	print "</body>\n";
+	print "</html>\n";
 }
 ############################## printTable ##############################
 sub printTable{

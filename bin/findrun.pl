@@ -11,10 +11,10 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/15";
+my $program_version="2023/02/09";
 ############################## OPTIONS ##############################
-use vars qw($opt_b $opt_d $opt_f $opt_h $opt_m $opt_o $opt_p $opt_r $opt_s);
-getopts('bdfhm:o:p:r:s:');
+use vars qw($opt_b $opt_d $opt_f $opt_h $opt_m $opt_o $opt_p $opt_r $opt_R $opt_s);
+getopts('bdfhm:o:p:r:R:s:');
 ############################## HELP ##############################
 sub help{
   print STDERR "\n";
@@ -23,14 +23,15 @@ sub help{
   print STDERR " TABLE  Table from vcftable.pl\n";
   print STDERR "  CASE  Case file/directory\n";
   print STDERR "Options:\n";
-  print STDERR "    -b  Output in BED format\n";
-  print STDERR "    -d  Exclude insertion/deletion\n";
-  print STDERR "    -f  Full option\n";
-  print STDERR "    -m  hom/het stretch (default=hom)\n";
-  print STDERR "    -o  Output directory (default='out')\n";
-  print STDERR "    -p  Pickup number (default>=1)\n";
-  print STDERR "    -r  Region size (default=1,000,000bp)\n";
-  print STDERR "    -s  Skip count (default=0)\n";
+  print STDERR "    -b  Output in (b)ed format\n";
+  print STDERR "    -d  Exclude insertion/(d)eletion\n";
+  print STDERR "    -f  (f)ull option\n";
+  print STDERR "    -m  hom/het (m)ode stretch (default=hom)\n";
+  print STDERR "    -o  (o)utput directory (default='out')\n";
+  print STDERR "    -p  (p)ickup number (default>=1)\n";
+  print STDERR "    -r  Minimum (r)egion size (default=1,000,000bp)\n";
+  print STDERR "    -R  Maximum (R)egion size\n";
+  print STDERR "    -s  (s)kip count (default=0)\n";
   print STDERR "\n";
   print STDERR "Author: akira.hasegawa\@riken.jp\n";
   print STDERR "Update: $program_version\n";
@@ -50,16 +51,18 @@ sub help{
 ############################## MAIN ##############################
 if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
 elsif(defined($opt_h)||scalar(@ARGV)<2){help();exit();}
-my $tableFile=$ARGV[0];
+my $filepath=$ARGV[0];
 my @caseNames=split(/,/,$ARGV[1]);
 my $noindel=$opt_d;
 my $stretchMode=defined($opt_m)?lc($opt_m):"hom";
 my $outDir=defined($opt_o)?$opt_o:'out';
 my $pickupNumber=defined($opt_p)?$opt_p:1;
-my $regionSize=defined($opt_r)?$opt_r:1000000;
+my $minRegionSize=defined($opt_r)?$opt_r:1000000;
+my $maxRegionSize=defined($opt_R)?$opt_R:undef;
 my $skipCount=defined($opt_s)?$opt_s:0;
 my $bedformat=$opt_b;
 my $fullMode=$opt_f;
+my $outdir=(defined($opt_o))?$opt_o:"out";
 if(scalar(@caseNames)==0){
   print STDERR "\n";
   print STDERR "ERROR  No VCF files were found.\n";
@@ -67,21 +70,30 @@ if(scalar(@caseNames)==0){
   help();
   exit(1);
 }
-if(!-e $tableFile){
+if(!-e $filepath){
   print STDERR "\n";
-  print STDERR "ERROR  Table file '$tableFile' doesn't exist.\n";
+  print STDERR "ERROR  Table file '$filepath' doesn't exist.\n";
   print STDERR "ERROR  Make sure you specify correct TABLE in the command line.\n";
   help();
   exit(1);
 }
 mkdir($outDir);
-my ($handler,$labels)=openTable($tableFile);
-my $writers=matchIndex(\@caseNames,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$regionSize,$skipCount,$fullMode,$bedformat);
+#go through files
 my $regionCount=0;
-while(!eof($handler->[0])){
-  checkRegion(nextTable($handler,$noindel),$writers,$stretchMode,$pickupNumber,$regionSize,$skipCount,$fullMode,$bedformat);
-  $regionCount++;
-  if($regionCount%10000==0){print STDERR "$regionCount...\n";}
+my @tableFiles=();
+if(-d $filepath){@tableFiles=getFiles($filepath);}
+else{@tableFiles=($filepath);}
+my $writers;
+foreach my $tableFile(@tableFiles){
+  my ($handler,$labels)=openTable($tableFile);
+  if(!defined($writers)){
+    $writers=matchIndex(\@caseNames,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
+  }
+  while(!eof($handler->[0])){
+    $regionCount+=checkRegion(nextTable($handler,$noindel),$writers,$stretchMode,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
+    $regionCount++;
+    if($regionCount%10000==0){print STDERR "$regionCount...\n";}
+  }
 }
 print STDERR "Total number of regions: $regionCount\n";
 foreach my $writer(@{$writers}){close($writer->[2]);}
@@ -94,18 +106,32 @@ sub absolutePath{
 	return Cwd::abs_path($directory)."/$filename";
 }
 ############################## checkRegion ##############################
+# centromereは後の工程で省いている。途中のfindrun/HDRでは除いていない。pickupNumberを指定して行っていた
+#1,000,000 big deletion　これまで　それぞれのSNPの重要性が下がる
+#500-2000 small deletion IN/DEL　これから　一つのSNPが重要になってくる　目視で
+#hom =     INS DEL 個別のチェックこれが必要？
+#hom =         DEL 個別のチェックこれが必要？
+#hom =     INS     個別のチェックこれも必要？
+#hom = SNP/INS/DEL noindel=F　現在の設定
+#hom = SNP         noindel=T　現在の設定（これを使っていた）
+#hom hom hom hom het
+#|-------------|
+#het het het het hom
+#|-------------|
 sub checkRegion{
   my $positions=shift();
   my $writers=shift();
   my $stretchMode=shift();
   my $pickupNumber=shift();
-  my $regionSize=shift();
+  my $minRegionSize=shift();
+  my $maxRegionSize=shift();
   my $skipCount=shift();
   my $fullMode=shift();
   my $bedFormat=shift();
   my $startFlag=($stretchMode eq "hom")?2:1;
   my $endFlag=($stretchMode eq "hom")?1:2;
   my $size=scalar(@{$positions});
+  my $count=0;
   foreach my $handler(@{$writers}){
     my $label=$handler->[0];
     my $index=$handler->[1];
@@ -133,7 +159,8 @@ sub checkRegion{
               $mismatch++;
               next;
             }
-            if($length<$regionSize){last;}
+            if($length<$minRegionSize){last;}
+            if(defined($maxRegionSize)&&$length>$maxRegionSize){last;}
             if($match<=$pickupNumber){last;}
             if($chromosome eq $lastChromosome && $end == $lastEnd){last;}
             if($bedFormat){
@@ -149,6 +176,7 @@ sub checkRegion{
             }
             $lastEnd=$end;
             $lastChromosome=$chromosome;
+            $count++;
             last;
           }
           if($flag2>0){$string.=" $flag2";}
@@ -156,6 +184,7 @@ sub checkRegion{
       }
     }
   }
+  return $count;
 }
 ############################## getDate ##############################
 sub getDate{
@@ -212,7 +241,8 @@ sub matchIndex{
   my $stretchMode=shift();
   my $noindel=shift();
   my $pickupNumber=shift();
-  my $regionSize=shift();
+  my $minRegionSize=shift();
+  my $maxRegionSize=shift();
   my $skipCount=shift();
   my $fullMode=shift();
   my $bedformat=shift();
@@ -229,7 +259,9 @@ sub matchIndex{
   for(my $i=0;$i<scalar(@{$labels});$i++){
     my $label=$labels->[$i];
     if(!exists($names->{$label})){next;}
-    my $filename="$label.${stretchMode}_region${regionSize}_pick${pickupNumber}_skip${skipCount}";
+    my $filename="$label.${stretchMode}_pick${pickupNumber}_skip${skipCount}";
+    if(defined($maxRegionSize)){$filename.="_min${minRegionSize}_max${maxRegionSize}";}
+    else{$filename.="_min${minRegionSize}";}
     if(defined($noindel)){$filename.="_noindel";}
     if(defined($fullMode)){$filename.="_full";}
     if(defined($bedformat)){$filename.=".bed";}
@@ -245,6 +277,7 @@ sub matchIndex{
 ############################## nextTable ##############################
 sub nextTable{
   my $handler=shift();
+  my $noindel=shift();
   my $reader=$handler->[0];
   my $next=$handler->[1];
   if(!defined($next)){return ();}
@@ -281,6 +314,35 @@ sub openFile{
 		elsif($path=~/\.bam$/){return IO::File->new("samtools view $path|");}
 		else{return IO::File->new($path);}
 	}
+}
+############################## getFiles ##############################
+sub getFiles{
+	my $directory=shift();
+	my $grep=shift();
+	my @files=();
+	opendir(DIR,$directory);
+	if(ref($grep)eq"ARRAY"){
+		foreach my $file(readdir(DIR)){
+			if($file=~/^\./){next;}
+			if($file eq""){next;}
+			my $path="$directory/$file";
+			if(-d $path){next;}
+			my $hit=0;
+			foreach my $g(@{$grep}){if($path=~/$g/){$hit=1;}}
+			if($hit){push(@files,$path);}
+		}
+	}else{
+		foreach my $file(readdir(DIR)){
+			if($file=~/^\./){next;}
+			if($file eq""){next;}
+			my $path="$directory/$file";
+			if(-d $path){next;}
+			if(defined($grep)&&$path!~/$grep/){next;}
+			push(@files,$path);
+		}
+	}
+	closedir(DIR);
+  return sort{$a cmp $b}@files;
 }
 ############################## openTable ##############################
 sub openTable{

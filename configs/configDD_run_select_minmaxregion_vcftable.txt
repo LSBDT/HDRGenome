@@ -1,17 +1,21 @@
 #project
-$project	testDD
+$project	testDDselect
 root->project	$project
 $project->project#indir		testdata/input
 
 #vcftable setting
 $project->vcftable#qvThreshold	50
+root->$project/vcftable	testdata/vcftable.txt
+$project->vcftable#selectBed	testdata/select.bed
 
 #findrun setting
 $project->findrun#noIndel	F
 $project->findrun#stretchMode	hom
 $project->findrun#pickupNumber	1
-$project->findrun#regionSize	1000000
+$project->findrun#regionSizeMin	500
+$project->findrun#regionSizeMax	2000
 $project->findrun#skipCount	0
+$project->findrun#chromosomeRegion	chr17:10000-20000,chr18:10000-20000
 
 #hdr setting
 $project->hdr#targetMode	DD
