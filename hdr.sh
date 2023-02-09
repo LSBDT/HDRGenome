@@ -101,9 +101,25 @@ filename=`basename $output`
 echo "INSERT $case->$project/findrun#log->$logFile"
 EOF
 
-perl bin/moirai2.pl -P "# Calculating positions by findrun with min max regions..." -d db -s 60 -m 1 -S bin/findrun.pl -b '$noIndel:-d' -i '$project->hdr#targetMode->DD,root->$project/vcftable->$table,root->$project/case->$case,$project->findrun#noIndel->$noIndel,$project->findrun#stretchMode->$stretchMode,$project->findrun#pickupNumber->$pickupNumber,$project->findrun#regionSizeMin->$regionSizeMin,$project->findrun#regionSizeMax->$regionSizeMax,$project->findrun#skipCount->$skipCount' -o '$case->$project/findrun->$output' command 'output=$project/findrun/$filename' << 'EOF'
+perl bin/moirai2.pl -P "# Calculating positions by findrun with min+max regions..." -d db -s 60 -m 1 -S bin/findrun.pl -b '$noIndel:-d' -i '$project->hdr#targetMode->DD,root->$project/vcftable->$table,root->$project/case->$case,$project->findrun#noIndel->$noIndel,$project->findrun#stretchMode->$stretchMode,$project->findrun#pickupNumber->$pickupNumber,$project->findrun#regionSizeMin->$regionSizeMin,$project->findrun#regionSizeMax->$regionSizeMax,$project->findrun#skipCount->$skipCount' -o '$case->$project/findrun->$output' command 'output=$project/findrun/$filename' << 'EOF'
 logFile=$project/log/findrun.$case.txt
 findrun.pl $noIndel -m $stretchMode -p $pickupNumber -r $regionSizeMin -R $regionSizeMax -s $skipCount -o $tmpdir $table $case 2> $logFile
+output=`ls $tmpdir/*.txt`
+filename=`basename $output`
+echo "INSERT $case->$project/findrun#log->$logFile"
+EOF
+
+perl bin/moirai2.pl -P "# Calculating positions by findrun with min regions..." -d db -s 60 -m 1 -S bin/findrun.pl -b '$noIndel:-d' -i '$project->hdr#targetMode->DD,root->$project/vcftable->$table,root->$project/case->$case,$project->findrun#noIndel->$noIndel,$project->findrun#stretchMode->$stretchMode,$project->findrun#pickupNumber->$pickupNumber,$project->findrun#regionSizeMin->$regionSizeMin,$project->findrun#skipCount->$skipCount' -o '$case->$project/findrun->$output' command 'output=$project/findrun/$filename' << 'EOF'
+logFile=$project/log/findrun.$case.txt
+findrun.pl $noIndel -m $stretchMode -r $regionSizeMin -R $regionSizeMax -s $skipCount -o $tmpdir $table $case 2> $logFile
+output=`ls $tmpdir/*.txt`
+filename=`basename $output`
+echo "INSERT $case->$project/findrun#log->$logFile"
+EOF
+
+perl bin/moirai2.pl -P "# Calculating positions by findrun with max regions..." -d db -s 60 -m 1 -S bin/findrun.pl -b '$noIndel:-d' -i '$project->hdr#targetMode->DD,root->$project/vcftable->$table,root->$project/case->$case,$project->findrun#noIndel->$noIndel,$project->findrun#stretchMode->$stretchMode,$project->findrun#pickupNumber->$pickupNumber,$project->findrun#regionSizeMax->$regionSizeMax,$project->findrun#skipCount->$skipCount' -o '$case->$project/findrun->$output' command 'output=$project/findrun/$filename' << 'EOF'
+logFile=$project/log/findrun.$case.txt
+findrun.pl $noIndel -m $stretchMode -p $pickupNumber -R $regionSizeMax -s $skipCount -o $tmpdir $table $case 2> $logFile
 output=`ls $tmpdir/*.txt`
 filename=`basename $output`
 echo "INSERT $case->$project/findrun#log->$logFile"
