@@ -11,34 +11,37 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/27";
+my $program_version="2023/08/30";
 ############################## OPTIONS ##############################
-use vars qw($opt_h);
-getopts('h');
+use vars qw($opt_b $opt_h);
+getopts('b:h');
 ############################## HELP ##############################
 sub help{
   print STDERR "\n";
-  print STDERR "Command: $program_name [option] STATS BED GENOME\n";
+  print STDERR "Command: $program_name [option] STATS TELOM ANNOT BED GENOME\n";
   print STDERR "Arguments:\n";
   print STDERR " STATS  Result from statdeRSl or maxstat\n";
-  print STDERR "   BED  BED file with gene locations\n";
-  print STDERR "GENOME  GENOME length file with gene locations\n";
+  print STDERR " TELOM  Telomere BED file\n";
+  print STDERR " ANNOT  Annotation BED file\n";
+  print STDERR "GENOME  GENOME length file\n";
   print STDERR "\n";
+  print STDERR "Options:\n";
+  print STDERR "     -b  bed file used to limit VCF table regions\n";
   print STDERR "Author: akira.hasegawa\@riken.jp\n";
   print STDERR "Update: $program_version\n";
   print STDERR "\n";
 }
 ############################## MAIN ##############################
 if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
-elsif(defined($opt_h)||scalar(@ARGV)<2){help();exit();}
+elsif(defined($opt_h)||scalar(@ARGV)<4){help();exit();}
 my $statsFile=shift(@ARGV);
 my $telomereFile=shift(@ARGV);
 my $annotationFile=shift(@ARGV);
 my $genomeFile=shift(@ARGV);
 my $jsFile=shift(@ARGV);
 my $filename=basename($statsFile,".out");
-my $assembly=basename($genomeFile,".genome");
-my ($program,$bedFile,$results)=readStats($statsFile);
+my $assembly=basename($genomeFile,".chrom.sizes");
+my ($program,$bedFile,$results)=readStats($statsFile,readBedRegions($opt_b));
 intersectTelomere($results,$bedFile,$telomereFile);
 findClosest($results,$bedFile,$annotationFile,$genomeFile);
 printResult($results,$program,$assembly,$jsFile,$filename);
@@ -48,6 +51,22 @@ sub absolutePath{
 	my $directory=dirname($path);
 	my $filename=basename($path);
 	return Cwd::abs_path($directory)."/$filename";
+}
+############################## checkBedRegions ##############################
+sub checkBedRegions{
+	my $regions=shift();
+	if(!defined($regions)){return 0;}#continue
+	my $chr=shift();
+	if(!exists($regions->{$chr})){return 1;}#skip
+	my $start=shift();
+	my $end=shift();
+	foreach my $array(@{$regions->{$chr}}){
+		my ($s,$e)=@{$array};
+		if($s<=$start&&$start<$e){return 0;}#intersect
+		if(!defined($end)){next;}
+		if($s<=$end&&$end<$e){return 0;}#intersect
+	}
+	return 1;#skip
 }
 ############################## findClosest ##############################
 sub findClosest{
@@ -85,6 +104,28 @@ sub getDate{
 	my $day=$time->mday;
 	if($day<10){$day="0".$day;}
 	return $year.$delim.$month.$delim.$day;
+}
+############################## getMetaDataFromFilename ##############################
+sub getMetaDataFromFilename{
+	my $filename=shift();
+	my $assembly=shift();
+	my @metadata=();
+	my ($name,$other)=split(/\./,$filename);
+	my ($target,@metas)=split(/_/,$other);
+	push(@metadata,"target:$target");
+	foreach my $meta(@metas){
+		if($meta=~/pick(\d+)/){push(@metadata,"pick hits >: $1");next;}
+		if($meta=~/skip(\d+)/){push(@metadata,"skip/mismatch: $1");next;}
+		if($meta=~/min(\d+)/){push(@metadata,"minimum region size: $1");next;}
+		if($meta=~/max(\d+)/){push(@metadata,"maximum region size: $1");next;}
+		if($meta=~/top(\d+)/){push(@metadata,"top region selected: $1");next;}
+		if($meta=~/full/){push(@metadata,"output in full mode");next;}
+		if($meta=~/noindel/){push(@metadata,"skipping insertion deletion");next;}
+		if($meta=~/dd/){push(@metadata,"HDR mode: DD");next;}
+		if($meta=~/ar/){push(@metadata,"HDR mode: AR");next;}
+		if($meta=~/ad/){push(@metadata,"HDR mode: AD");next;}
+	}
+	return ($name,@metadata);
 }
 ############################## intersectTelomere ##############################
 sub intersectTelomere{
@@ -146,28 +187,6 @@ sub openFile{
 		else{return IO::File->new($path);}
 	}
 }
-############################## getMetaDataFromFilename ##############################
-sub getMetaDataFromFilename{
-	my $filename=shift();
-	my $assembly=shift();
-	my @metadata=();
-	my ($name,$other)=split(/\./,$filename);
-	my ($target,@metas)=split(/_/,$other);
-	push(@metadata,"target:$target");
-	foreach my $meta(@metas){
-		if($meta=~/pick(\d+)/){push(@metadata,"pick hits >: $1");next;}
-		if($meta=~/skip(\d+)/){push(@metadata,"skip/mismatch: $1");next;}
-		if($meta=~/min(\d+)/){push(@metadata,"minimum region size: $1");next;}
-		if($meta=~/max(\d+)/){push(@metadata,"maximum region size: $1");next;}
-		if($meta=~/top(\d+)/){push(@metadata,"top region selected: $1");next;}
-		if($meta=~/full/){push(@metadata,"output in full mode");next;}
-		if($meta=~/noindel/){push(@metadata,"skipping insertion deletion");next;}
-		if($meta=~/dd/){push(@metadata,"HDR mode: DD");next;}
-		if($meta=~/ar/){push(@metadata,"HDR mode: AR");next;}
-		if($meta=~/ad/){push(@metadata,"HDR mode: AD");next;}
-	}
-	return ($name,@metadata);
-}
 ############################## printResult ##############################
 sub printResult{
 	my $results=shift();
@@ -190,6 +209,7 @@ sub printResult{
 	}
 	print "<style>\n";
 	print "table,td,th{border: 2px #000000 solid;}\n";
+	print ".num{text-align:right;}\n";
 	print "</style>\n";
 	print "<body>\n";
 	print "<h1>$name</h1>\n";
@@ -199,34 +219,71 @@ sub printResult{
 	foreach my $meta(@metadata){print "<li>$meta</li>\n";}
 	print "</ul>\n";
 	print "<table>\n";
-	print "<thead>\n<tr><th class=\"num\">Group_1</th><th class=\"num\">Group_2</th><th class=\"num\">n1</th><th class=\"num\">n2</th><th class=\"num\">Teststat</th><th class=\"num\">n</th><th class=\"num\">p</th><th class=\"case\">genome</th><th class=\"case\">mH</th><th class=\"num\">rank</th><th class=\"num\">Line</th><th class=\"case\">annotation</th></tr>\n</thead>\n";
-	print "<tbody>\n";
-	foreach my $result(@{$results}){
-		my $group_1=$result->[0];
-		my $group_2=$result->[1];
-		my $n1=$result->[2];
-		my $n2=$result->[3];
-		my $teststat=$result->[4];
-		my $n=$result->[5];
-		my $p=$result->[6];
-		my $chr=($program eq "statdel")?$result->[7]:$result->[8];
-		my $start_bp=($program eq "statdel")?$result->[8]:$result->[9]-100;
-		my $end_bp=($program eq "statdel")?$result->[9]:$result->[9]+100;
-		my $genome=" <a href=\"https://genome.ucsc.edu/cgi-bin/hgTracks?db=$assembly&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=$chr%3A${start_bp}%2D${end_bp}\">$chr:$start_bp-$end_bp</a>";
-		my $mH=$result->[10];
-		my $rank=$result->[11];
-		my $line=$result->[12];
-		my $annotation=$result->[13];
-		print "<tr><td>$group_1</td><td>$group_2</td><td>$n1</td><td>$n2</td><td>$teststat</td><td>$n</td><td>$p</td><td>$genome</td><td>$mH</td><td>$rank</td><td>$line</td>";
-		my $line=shift();
-		foreach my $ann(@{$annotation}){
-			my ($gene,$dist)=@{$ann};
-			if(defined($line)){$line.=".";}
-			if($gene ne "telomere"){$gene=" <a href=\"https://www.genecards.org/cgi-bin/carddisp.pl?gene=$gene\">$gene</a>"}
-			$line.="$gene($dist)";
+	if($program eq "statdel"){
+		print "<thead>\n<tr><th class=\"num\">Group_1</th><th class=\"num\">Group_2</th><th class=\"num\">n1</th><th class=\"num\">n2</th><th class=\"num\">Teststat</th><th class=\"num\">n</th><th class=\"num\">p</th><th class=\"case\">genome</th><th class=\"case\">mH</th><th class=\"num\">rank</th><th class=\"num\">Line</th><th class=\"case\">annotation</th></tr>\n</thead>\n";
+		print "<tbody>\n";
+		#Group_1	Group_2	n1	n2	Teststat	n	p	chr	start_bp	end_bp	mH	rank	Line
+		foreach my $result(@{$results}){
+			my $group_1=$result->[0];
+			my $group_2=$result->[1];
+			my $n1=$result->[2];
+			my $n2=$result->[3];
+			my $teststat=$result->[4];
+			my $n=$result->[5];
+			my $p=$result->[6];
+			my $chr=$result->[7];
+			my $start_bp=$result->[8];
+			my $end_bp=$result->[9];
+			my $mH=$result->[10];
+			my $rank=$result->[11];
+			my $line=$result->[12];
+			my $annotation=$result->[13];
+			my $genome=" <a href=\"https://genome.ucsc.edu/cgi-bin/hgTracks?db=$assembly&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=$chr%3A${start_bp}%2D${end_bp}\">$chr:$start_bp-$end_bp</a>";
+			print "<tr><td>$group_1</td><td>$group_2</td><td>$n1</td><td>$n2</td><td>$teststat</td><td>$n</td><td>$p</td><td>$genome</td><td>$mH</td><td>$rank</td><td>$line</td>";
+			my $line=shift();
+			foreach my $ann(@{$annotation}){
+				my ($gene,$dist)=@{$ann};
+				if(defined($line)){$line.=".";}
+				if($gene ne "telomere"){$gene=" <a href=\"https://www.genecards.org/cgi-bin/carddisp.pl?gene=$gene\">$gene</a>"}
+				$line.="$gene($dist)";
+			}
+			print "<td>$line</td>";
+			print "</tr>\n";
 		}
-		print "<td>$line</td>";
-		print "</tr>\n";
+	}else{
+		print "<thead>\n<tr><th class=\"num\">Var</th><th class=\"num\">Group_1</th><th class=\"num\">Group_2</th><th class=\"num\">n1</th><th class=\"num\">n2</th><th class=\"num\">Teststat</th><th class=\"num\">R</th><th class=\"num\">p</th><th class=\"case\">genome</th><th class=\"case\">median</th><th class=\"num\">HDR</th><th class=\"num\">rank</th><th class=\"case\">annotation</th></tr>\n</thead>\n";
+		print "<tbody>\n";
+		foreach my $result(@{$results}){
+			# Var Group_1 Group_2 n1 n2 Teststat R      p chr   position median HDR   rank
+			# 130	0.8737	0.1527	3	3	19.9671	30	0.2500	chr1	19499560	ok	0.7500	1
+			my $var=$result->[0];
+			my $group_1=$result->[1];
+			my $group_2=$result->[2];
+			my $n1=$result->[3];
+			my $n2=$result->[4];
+			my $teststat=$result->[5];
+			my $r=$result->[6];
+			my $p=$result->[7];
+			my $chr=$result->[8];
+			my $position=$result->[9];
+			my $median=$result->[10];
+			my $hdr=$result->[11];
+			my $rank=$result->[12];
+			my $annotation=$result->[13];
+			my $start_bp=$position-$r;
+			my $end_bp=$position+$r;
+			my $genome=" <a href=\"https://genome.ucsc.edu/cgi-bin/hgTracks?db=$assembly&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=$chr%3A${start_bp}%2D${end_bp}\">$chr:$start_bp-$end_bp</a>";
+			print "<tr><td>$var</td><td>$group_1</td><td>$group_2</td><td>$n1</td><td>$n2</td><td>$teststat</td><td>$r</td><td>$p</td><td>$genome</td><td>$median</td><td>$hdr</td><td>$rank</td>";
+			my $line=shift();
+			foreach my $ann(@{$annotation}){
+				my ($gene,$dist)=@{$ann};
+				if(defined($line)){$line.=".";}
+				if($gene ne "telomere"){$gene=" <a href=\"https://www.genecards.org/cgi-bin/carddisp.pl?gene=$gene\">$gene</a>"}
+				$line.="$gene($dist)";
+			}
+			print "<td>$line</td>";
+			print "</tr>\n";
+		}
 	}
 	print "</tbody>\n";
 	print "</table>\n";
@@ -276,15 +333,33 @@ sub printTableSub{
 	}
 	return wantarray?@output:$output[0];
 }
+############################## readBedRegions ##############################
+sub readBedRegions{
+	my $bedFile=shift();
+	if(!defined($bedFile)){return;}
+	my $regions={};
+	my $reader=openFile($bedFile);
+	my $hit=0;
+	while(<$reader>){
+		chomp;
+		my ($chr,$start,$end,@tokens)=split(/\t/);
+		if(!exists($regions->{$chr})){$regions->{$chr}=[];}
+		push(@{$regions->{$chr}},[$start,$end]);
+		$hit++;
+	}
+	if($hit>0){return $regions;}
+}
 ############################## readStats ##############################
 sub readStats{
 	my $file=shift();
+	my $regions=shift();
 	my $reader=openFile($file);
 	my @columns;
 	my $program;
 	while(<$reader>){
-		#Var Group_1 Group_2    n1    n2 Teststat      R      p chr   position median HDR   rank
+		# Var Group_1 Group_2    n1    n2 Teststat      R      p chr   position median HDR   rank
 		#Group_1	Group_2	n1	n2	Teststat	n	p	chr	start_bp	end_bp	mH	rank	Line
+		if(/^\s+(.+)$/){$_=$1;}
 		if(/Var Group_1/){chomp;@columns=split(/\s+/);$program="maxstatRS";last;}
 		if(/Group_1/){chomp;@columns=split(/\t/);$program="statdel";last;}
 	}
@@ -301,21 +376,27 @@ sub readStats{
 			my $chr=$tokens[7];
 			my $start=$tokens[8];
 			my $end=$tokens[9];
+			if(checkBedRegions($regions,$chr,$start,$end)){next;}
 			my $name="id$index";
 			print $fh "$chr\t$start\t$end\t$name\t0\t.\n";
 			$index++;
 		}
 	}elsif($program eq "maxstatRS"){
+		# 130	0.8737	0.1527	3	3	19.9671	30	0.2500	chr1	19499560	ok	0.7500	1
 		while(<$reader>){
 			if(/^\s+$/){last;}
 			if(/Note:/){last;}
 			chomp;
 			my @tokens=split(/\t/);
 			push(@results,\@tokens);
-			my $chr=$tokens[8];
-			my $start=$tokens[9];
+			my $margin=$tokens[6];
+			if($margin==-9){$margin=0;}
+			my $chr=$tokens[8];#chr1
+			my $start=$tokens[9]-$margin;#19499560-30
+			my $end=$tokens[9]+$margin;#19499560+30
+			if(checkBedRegions($regions,$chr,$start,$end)){next;}
 			my $name="id$index";
-			print $fh "$chr\t$start\t$start\t$name\t0\t.\n";
+			print $fh "$chr\t$start\t$end\t$name\t0\t.\n";
 			$index++;
 		}
 	}

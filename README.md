@@ -16,10 +16,18 @@
 ```
 hdrgenome/
 ├── annotation/ - files for annotation
-│   ├── cytoBand_hg19.bed 
-│   └── cytoBand_hg38.bed 
+│   ├── hg19.chromsizes - chrom sizes of hg19
+│   ├── hg19.cytoband.bed - telomere information of hg19
+│   ├── hg19.gencode.bed - gencode information of hg19
+│   ├── hg38.chrom.sizes  - chrom sizes of hg38
+│   ├── hg38.cytoband.bed - telomere information of hg38
+│   └── hg38.gencode.bed - gencode information of hg38
 ├── bin/
+│   ├── annotation.pl - Annotates statistical HDR results with overlapping telomere and genes.
+│   ├── dag.pl -Workflow database script
 │   ├── findrun.pl - Uses table from vcftable.pl to compute HDR
+│   ├── genomecov.pl - List up candidates with genome coverage
+│   ├── getCases.pl - Get patient/controls from vcftable
 │   ├── hdr.pl - Uses table from vcftable.pl to compute HDR
 │   ├── linux/ - linux binary directory
 │   │   ├── maxstatRS - Linux version of stadel (binary)
@@ -28,16 +36,18 @@ hdrgenome/
 │   │   ├── maxstatRS - MacOS version of stadel (binary)
 │   │   └── statdel - MacOS version of stadel (binary)
 │   ├── moirai2.pl - workflow script
-│   ├── rdf.pl - pipeline script
+│   ├── selectGenesFromGencode.pl - Select genes from gencode file
+│   ├── selctVcftable.pl - Count number of hits per vcf regions
 │   ├── statdel.pl - A wrapper script to run statdel
-│   └── vcftable.pl - Merge multiple VCF files into one table
+│   ├── vcftable.pl - Merge multiple VCF files into one table
+│   └── vcftable2bed.pl - Convert vcf table to bed format
 ├── docker.sh - Script to run pipeline with a docker.
 ├── hdr.sh - Script to run pipeline.
 ├── LINCENCE - LICENCE of this project
 ├── README - README of this project
 └── testdata - Test data used in test case
     ├── configAD.txt - config file used by a pipeline for test data
-    ├── configAD2.txt - config file used by a pipeline for test data
+    ├── configAD_run_with_vcftable_from_configAD.txt - config file used by a pipeline for test data
     ├── configAR.txt - config file used by a pipeline for test data
     ├── configDD.txt - config file used by a pipeline for test data
     ├── download1000GenomesChromosomeSamples.sh - download sample chromosome VCF files from 1000Genomes
@@ -47,15 +57,13 @@ hdrgenome/
     │   ├── NA18940_v2.vcf - variant call format of NA18940_v2
     │   ├── NA18941_v2.vcf - variant call format of NA18941_v2
     │   └── NA18942_v2.vcf - variant call format of NA18942_v2
-    ├── position/
-    │   ├── NA18939_v2.txt - region to investigate for test case NA18939_v2
-    │   ├── NA18940_v2.txt - region to investigate for test case NA18940_v2
-    │   ├── NA18941_v2.txt - region to investigate for test case NA18941_v2
-    │   └── NA18942_v2.txt - region to investigate for test case NA18942_v2
-    └── statdel/ - example of statdel output
+    └── position/
+        ├── NA18939_v2.txt - region to investigate for test case NA18939_v2
+        ├── NA18940_v2.txt - region to investigate for test case NA18940_v2
+        ├── NA18941_v2.txt - region to investigate for test case NA18941_v2
+        └── NA18942_v2.txt - region to investigate for test case NA18942_v2
 ```
 ## URL
-- Own Cloud: https://genomec.gsc.riken.jp/gerg/owncloud/index.php/s/oanbE95OdimomfW
 - Europe PMC: https://europepmc.org/article/med/28722338
 - Nature: https://www.ncbi.nlm.nih.gov/pubmed/26143870
 
@@ -67,9 +75,16 @@ hdrgenome/
 ## Automation Pipeline
 - "hdr.sh" is a pipeline which does following processes:
   - vcftable.pl
-  - findrun.pl
+  - findrun.pl / genomecov.pl [DD Mode]
   - hdr.pl
   - statdel.pl
+  - annotation.pl
+- Use "docker.sh" instead of "hdr.sh", if you want to run with docker.
+- Please pull "moirai2/biotools" from docker hub with
+```
+docker pull moirai2/biotools
+```
+- "hdr.sh" is a pipeline which does following processes:
 - Place vcf|bcf|avinput under a directory (for example, input/ directory)
 ```
 hdrgenome/
@@ -80,17 +95,18 @@ hdrgenome/
 ```
 - Under hdrgenome root directory, start pipline with the following command line.
 ```
-bash run_hdr.sh [CONFIG]
+bash hdr.sh [CONFIG]
+OR
+bash docker.sh [CONFIG]
 ```
 - A directory with specified PROJECT_NAME will be created.
 - All the results will be stored under the project directory.
 - Multiple projects can be created under a work directory.
 - To run test samples:
 ```
-bash run_hdr.sh testdata/configAD.txt
-bash run_hdr.sh testdata/configAR.txt
-bash run_hdr.sh testdata/configDD.txt
-bash run_hdr.sh testdata/configAD2.txt
+bash hdr.sh testdata/configAD.txt
+bash hdr.sh testdata/configAR.txt
+bash hdr.sh testdata/configDD.txt
 ```
 - Directory will be created with a project name.
 - testdataAD for example will create these directories and files:
@@ -104,7 +120,7 @@ testdataAD/
 ├──stats/  Result from statdel/maxStats computation
 └──vcftable.txt  Result from VCFTable computation
 ```
-- 'configAD2.txt' reuses vcftable from configAD.txt by specifying vcftable information in config file.
+- 'configAD_run_with_vcftable_from_configAD.txt' reuses vcftable from configAD.txt by specifying vcftable information in config file.
 ```
 $project->vcftable	testAD/vcftable.txt
 ```
@@ -157,7 +173,7 @@ $project->endDistance	50
 ```
 - Example of config files can be found at testdata/
   - testdata/configAD.txt  Example of config for AD mode
-  - testdata/configAD2.txt  Example of config for AD mode using already calculated VCF table.
+  - testdata/configAD_run_with_vcftable_from_configAD.txt  Example of config for AD mode using already calculated VCF table.
   - testdata/configAR.txt  Example of config for AR mode
   - testdata/configDD.txt  Example of config for DD mode
 - By specifying path to VCFtable file, VCFtable computation step will be  
