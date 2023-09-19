@@ -7,10 +7,11 @@
 ## Member
 - Takeya Kasukawa <takeya.kasukawa@riken.jp>
 - Akira Hasegawa <akira.hasegawa@riken.jp>	
-- Atsuko Imai <atsuko_imai_hp@yahoo.co.jp>
 - Atsushi Kondo <atsushi.kondo@riken.jp>
+- Atsuko Imai <atsuko_imai_hp@yahoo.co.jp>
 - Akihiro Nakaya <nakaya@edu.k.u-tokyo.ac.jp>
 - Yasushi Okazaki <ya-okazaki@juntendo.ac.jp>
+- Kouta Nakamura <k.nakamura.fb@juntendo.ac.jp>
 
 ## Structure
 ```
