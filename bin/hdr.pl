@@ -340,6 +340,7 @@ sub createLabel{
   while(<IN>){$count++;}
   close(IN);
   chomp($label);
+  $label=~s/\r//g;
   my @tokens=split(/\t/,$label);
   my $size=(scalar(@tokens)>2)?1:int(($windowEnd-$windowStart)/$windowInterval)+1;
   return "$count $ctrlCount $size # 1:chr1";
@@ -413,7 +414,7 @@ sub matchNames{
 ############################## nextPosition ##############################
 sub nextPosition{
   my $reader=shift();
-  my $line=<$reader>;chomp($line);
+  my $line=<$reader>;chomp($line);$line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   if($tokens[0]!~/^chr/){$tokens[0]="chr".$tokens[0];}
   elsif($tokens[0]=~/^CHR(.+)$/i){$tokens[0]="chr$1";}
@@ -442,13 +443,13 @@ sub nextTable{
   my ($chr,$pos,@data)=@{$next};
   while(($chr cmp $chromosome)<0||($pos<$start)){
     if(eof($reader)){$endReached=1;last;}
-    my $line=<$reader>;chomp($line);
+    my $line=<$reader>;chomp($line);$line=~s/\r//g;
     ($chr,$pos,@data)=split(/\t/,$line);
   }
   while(($chr eq $chromosome)&&($pos<=$end)){
     push(@positions,[$chr,$pos,@data]);
     if(eof($reader)){$endReached=1;last;}
-    my $line=<$reader>;chomp($line);
+    my $line=<$reader>;chomp($line);$line=~s/\r//g;
     ($chr,$pos,@data)=split(/\t/,$line);
   }
   if($endReached){$handler->[1]=undef;}
@@ -479,6 +480,7 @@ sub openPosition{
   else{$reader=IO::File->new("sort $file|");}
   my $line=<$reader>;
   chomp($line);
+  $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   my $type=(scalar(@tokens)>2)?"region":"position";
   return ($reader,$type);
@@ -493,6 +495,7 @@ sub openTable{
   else{$reader=IO::File->new($file);}
   my $line=<$reader>;
   chomp($line);
+  $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   my $hash={};
   for(my $i=2;$i<scalar(@tokens);$i++){$hash->{$tokens[$i]}=$i-2;}
@@ -502,6 +505,7 @@ sub openTable{
   }
   $line=<$reader>;
   chomp($line);
+  $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   return [$reader,\@tokens];
 }
@@ -565,6 +569,7 @@ sub retrieveCtrlNamesFromTable{
   my $line=<$reader>;
   close($reader);
   chomp($line);
+  $line=~s/\r//g;
   my @names=split(/\t/,$line);
   shift(@names);shift(@names);
   return \@names;

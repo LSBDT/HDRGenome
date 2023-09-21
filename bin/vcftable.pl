@@ -232,6 +232,7 @@ sub nextLine{
   }else{
     my $line=<$in>;
     chomp($line);
+    $line=~s/\r//g;
     my @tokens=split(/\t/,$line);
     $reader->[1]=\@tokens;
   }
@@ -281,6 +282,7 @@ sub openTable{
   my $reader=IO::File->new($file);
   my $line=<$reader>;
   chomp($line);
+  $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   return [$reader,\@tokens];
 }
@@ -294,7 +296,7 @@ sub parseAVINPUT{
   my $previous_chr;
   while(<$reader>){
      if(/^#/){next;}#skip comment
-    chomp();#remove \n
+    chomp;s/\r//g;
     my ($chr,$start,$end,$ref,$alt,$type,$score,$qual,$chr2,$start2,$id,$ref2,$alt2,$score2,$qual2,$info,$format,$na)=split(/\t/);
     if($chr!~/^chr/){$chr="chr$chr";}#add chr
     elsif($chr=~/^CHR(.+)$/i){$chr="chr$1";}#lowercase
@@ -348,7 +350,7 @@ sub parseGVCF{
   my $splitFiles=shift();
   my $previous_chr;
   while(<$reader>){
-    chomp;
+    chomp;s/\r//g;
     if(/^#/){}
     #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Pt2402_BL1811.Bt07
     my ($chr,$pos,$id,$ref,$alt,$qual,$filter,$info,$format,$na)=split(/\t/);
@@ -401,7 +403,7 @@ sub parseMultiVCF{
   while(<$reader>){
     if(/^##/){next;}
     if(/^#/){
-      chomp;
+      chomp;s/\r//g;
       my @tokens=split(/\t/);
       @samples=splice(@tokens,9);
       last;
@@ -410,7 +412,7 @@ sub parseMultiVCF{
   my $writer=IO::File->new(">$tableFile");
   print $writer "#chromosome\tposition\t".join("\t",@samples)."\n";
   while(<$reader>){
-    chomp;
+    chomp;s/\r//g;
     #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA18939
     my ($chr,$pos,$id,$ref,$alt,$qual,$filter,$info,$format,@nas)=split(/\t/);
     if($chr!~/^chr/){$chr="chr$chr";}
@@ -455,7 +457,7 @@ sub parseVCF{
   my $previous_chr;
    while(<$reader>){
     if(/^#/){next;}
-    chomp;
+    chomp;s/\r//g;
     #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA18939
     my ($chr,$pos,$id,$ref,$alt,$qual,$filter,$info,$format,$na)=split(/\t/);
     if($chr!~/^chr/){$chr="chr$chr";}
@@ -755,6 +757,7 @@ sub testCommand{
 	}
 	my $value1=readText($file);
 	chomp($value1);
+  $value1=~s/\r//g;
 	if($value2 eq""){if($value1 eq""){return 0;}}
 	if($value1 eq $value2){return 0;}
 	print STDERR ">$command\n";

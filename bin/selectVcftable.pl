@@ -14,6 +14,7 @@ sub selectRegions{
     print $label;
     while(<$reader>){
         chomp;
+		s/\r//g;
         my ($chr,$position,@counts)=split(/\t/);
         if($preChr ne $chr){$region=exists($regions->{$chr})?$regions->{$chr}:undef;$preChr=$chr;}
         if(!defined($region)){next;}
@@ -36,6 +37,7 @@ sub readBedFile{
     my $regions={};
     while(<$reader>){
         chomp;
+		s/\r//g;
         my ($chr,$start,$end,@tokens)=split(/\t/);
         if(!defined($regions->{$chr})){$regions->{$chr}=[];}
         push(@{$regions->{$chr}},[$start,$end]);

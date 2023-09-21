@@ -2,6 +2,7 @@
 while(<STDIN>){
     if(/^#/){next;}
     chomp;
+    s/\r//g;
     my $Line=$_;
     my ($seqname,$source,$feature,$start,$end,$score,$strand,$frame,$attribute)=split(/\t/);
     if($feature ne "gene"){next;}

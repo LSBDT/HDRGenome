@@ -1,12 +1,11 @@
 #project
-$project	testADvcftable
+$project	testADregion
 root->project	$project
 $project->project#indir		testdata/input
-$project->project#positiondir	testdata/position
+$project->project#positiondir	testdata/position2
 
 #vcftable setting
 $project->vcftable#qvThreshold	50
-root->$project/vcftable	testAD/vcftable.txt
 
 #hdr setting
 $project->hdr#targetMode	AD

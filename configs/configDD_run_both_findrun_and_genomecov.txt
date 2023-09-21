@@ -1,5 +1,5 @@
 #project
-$project	testDD3
+$project	testDDboth
 root->project	$project
 $project->project#indir		testdata/input
 

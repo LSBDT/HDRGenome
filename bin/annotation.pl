@@ -79,7 +79,7 @@ sub findClosest{
 	system("bedtools closest -g $genomeFile -D ref -a $bedA -b $bedB>$tmpfile");
 	my $reader=openFile($tmpfile);
 	while(<$reader>){
-		chomp;
+		chomp;s/\r//g;
 		my @token=split(/\t/);
 		my $id=$token[3];
 		my $gene=$token[9];
@@ -138,7 +138,7 @@ sub intersectTelomere{
 	system("bedtools intersect -a $bedA -b $bedB > $tmpfile");
 	my $reader=openFile($tmpfile);
 	while(<$reader>){
-		chomp;
+		chomp;s/\r//g;
 		my @token=split(/\t/);
 		my $id=$token[3];
 		if($id=~/^id(\d+)$/){
@@ -341,7 +341,7 @@ sub readBedRegions{
 	my $reader=openFile($bedFile);
 	my $hit=0;
 	while(<$reader>){
-		chomp;
+		chomp;s/\r//g;
 		my ($chr,$start,$end,@tokens)=split(/\t/);
 		if(!exists($regions->{$chr})){$regions->{$chr}=[];}
 		push(@{$regions->{$chr}},[$start,$end]);
@@ -360,8 +360,8 @@ sub readStats{
 		# Var Group_1 Group_2    n1    n2 Teststat      R      p chr   position median HDR   rank
 		#Group_1	Group_2	n1	n2	Teststat	n	p	chr	start_bp	end_bp	mH	rank	Line
 		if(/^\s+(.+)$/){$_=$1;}
-		if(/Var Group_1/){chomp;@columns=split(/\s+/);$program="maxstatRS";last;}
-		if(/Group_1/){chomp;@columns=split(/\t/);$program="statdel";last;}
+		if(/Var Group_1/){chomp;s/\r//g;@columns=split(/\s+/);$program="maxstatRS";last;}
+		if(/Group_1/){chomp;s/\r//g;@columns=split(/\t/);$program="statdel";last;}
 	}
 	my ($fh,$tmpfile)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".bed");
 	my $index=0;
@@ -370,7 +370,7 @@ sub readStats{
 		while(<$reader>){
 			if(/^\s+$/){last;}
 			if(/Note:/){last;}
-			chomp;
+			chomp;s/\r//g;
 			my @tokens=split(/\t/);
 			push(@results,\@tokens);
 			my $chr=$tokens[7];
@@ -386,13 +386,14 @@ sub readStats{
 		while(<$reader>){
 			if(/^\s+$/){last;}
 			if(/Note:/){last;}
-			chomp;
+			chomp;s/\r//g;
 			my @tokens=split(/\t/);
 			push(@results,\@tokens);
 			my $margin=$tokens[6];
 			if($margin==-9){$margin=0;}
 			my $chr=$tokens[8];#chr1
 			my $start=$tokens[9]-$margin;#19499560-30
+			if($start<0){$start=0;}
 			my $end=$tokens[9]+$margin;#19499560+30
 			if(checkBedRegions($regions,$chr,$start,$end)){next;}
 			my $name="id$index";

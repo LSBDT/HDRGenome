@@ -289,7 +289,7 @@ sub nextTable{
   my $chr;
   my $pos;
   while(<$reader>){
-    chomp();
+    chomp;s/\r//g;
     ($chr,$pos,@data)=split(/\t/);
     if($chr ne $chromosome){$handler->[1]=[$chr,$pos,@data];last;}
     if(defined($noindel)){#take care of indel
@@ -353,10 +353,12 @@ sub openTable{
   else{$reader=IO::File->new($file);}
   my $line=<$reader>;
   chomp($line);
+  $line=~s/\r//g;
   my @names=split(/\t/,$line);
   shift(@names);shift(@names);
   $line=<$reader>;
   chomp($line);
+  $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   return ([$reader,\@tokens],\@names);
 }

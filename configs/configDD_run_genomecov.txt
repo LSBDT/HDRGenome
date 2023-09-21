@@ -1,5 +1,5 @@
 #project
-$project	testDD2
+$project	testDDgenomecov
 root->project	$project
 $project->project#indir		testdata/input
 

@@ -19,6 +19,7 @@ getopts('hn:');
 #chromosome	position	NA18939_v2	NA18940_v2	NA18941_v2	NA18942_v2
 my $line=<STDIN>;
 chomp($line);
+$line=~s/\r//g;
 if($line=~/^#\s*(.+)$/){$line=$1;}
 my @labels=split(/\t/,$line);
 shift(@labels);

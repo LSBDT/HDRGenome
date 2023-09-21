@@ -59,6 +59,7 @@ sub absolutePath {
 sub chomp2{
 	my $line=shift();
 	chomp($line);
+	$line=~s/\r//g;
 	if($line=~/^\s+(.+)$/){$line=$1;}
 	return $line;
 }
@@ -85,6 +86,7 @@ sub handleOutput{
 	my $program;
 	while(<IN>){
 		chomp;
+		s/\r//g;
 		print $writer "$_\n";
 		if(/Mean HDR/){
 			my $line=<IN>;
@@ -174,6 +176,7 @@ sub prepareInput{
 	<IN>;
 	my $label=<IN>;
 	chomp($label);
+	$label=~s/\r//g;
 	my @labels=split(/\t/,$label);
 	my $ctrlsize=0;
 	foreach my $l(@labels){if($l=~/^Case/){$ctrlsize++;}}
@@ -182,6 +185,7 @@ sub prepareInput{
 	my $replaces={};
 	while(<IN>){
 		chomp;
+		s/\r//g;
 		my @token=split(/\t/);
 		if($token[0]=~/^chr\d+$/){}#chr1 chr2 chr3 ... chr22
 		elsif($token[0]=~/^chrX$/){$token[0]="chr23";$replaces->{"chrX"}="chr23";}#chrX
@@ -322,15 +326,15 @@ sub runProgram{
 	print STDERR "Output file: $output\n";
 	print STDERR "==================== input file ====================\n";
 	my $reader=openFile($tmpInput);
-	while(<$reader>){chomp;print STDERR "$_\n";}
+	while(<$reader>){chomp;s/\r//g;print STDERR "$_\n";}
 	close($reader);
 	print STDERR "==================== param file ====================\n";
 	$reader=openFile($param);
-	while(<$reader>){chomp;print STDERR "$_\n";}
+	while(<$reader>){chomp;s/\r//g;print STDERR "$_\n";}
 	close($reader);
 	print STDERR "==================== $program log ====================\n";
 	$reader=openFile($tmpfile);
-	while(<$reader>){chomp;print STDERR "$_\n";}
+	while(<$reader>){chomp;s/\r//g;print STDERR "$_\n";}
 	close($reader);
 	handleOutput($tmpOutput,$output);
 	unlink($param);

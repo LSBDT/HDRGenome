@@ -72,7 +72,7 @@ sub createBed{
   elsif($stretchMode eq"het"){$mode=1;}
   my ($fh,$tmpfile)=tempfile(DIR=>"/tmp",TEMPLATE=>"XXXXXX",SUFFIX=>".bed");
   while(<$reader>){
-    chomp;
+    chomp;s/\r//g;
     my @tokens=split(/\t/);
     my $chr=$tokens[0];
     my $pos=$tokens[1];
@@ -126,6 +126,7 @@ sub getColumnIndex{
   my $basename=shift();
   my $line=<$reader>;
   chomp($line);
+  $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   my $index=-1;
   for(my $i=0;$i<scalar(@tokens);$i++){
@@ -159,7 +160,7 @@ sub groupByDepth{
   my $currentDepth;
   my @array=();
   while(<$reader>){
-    chomp;
+    chomp;s/\r//g;
     my ($chr,$start,$end,$depth)=split(/\t/);
     if($depth==0){
       if(defined($currentChr)&&$currentDepth>1){push(@array,[$currentChr,$currentStart,$currentEnd,$currentDepth]);}
@@ -250,7 +251,7 @@ sub pickTopX{
   system("sort -k1,1 -k2,2n -k3,3n $tmpfile > $tmpfile2");
   my $reader=openFile($tmpfile2);
   print $writer "#Chr\tStart\tEnd\tDepth\n";
-  while(<$reader>){chomp;print $writer "$_\n";}
+  while(<$reader>){chomp;s/\r//g;print $writer "$_\n";}
   close($reader);
   close($writer);
 }
