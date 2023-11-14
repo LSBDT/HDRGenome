@@ -1,5 +1,5 @@
 #project
-$project	testDDboth
+$project	testDD_run_both_findrun_and_genomecov
 root->project	$project
 $project->project#indir		testdata/input
 

@@ -1,5 +1,5 @@
 #project
-$project	testADvcftable
+$project	testAD_run_with_vcftable_from_configAD
 root->project	$project
 $project->project#indir		testdata/input
 $project->project#positiondir	testdata/position

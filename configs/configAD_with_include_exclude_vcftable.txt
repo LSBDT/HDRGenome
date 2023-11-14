@@ -1,0 +1,27 @@
+#project
+$project	testAD_with_include_exclude_vcftable
+root->project	$project
+$project->project#indir		testdata/input
+$project->project#positiondir	testdata/position
+
+#vcftable setting
+$project->vcftable#qvThreshold	50
+$project->vcftable#include	annotation/hg38.gencode.bed
+$project->vcftable#exclude	testdata/select.bed
+
+#hdr setting
+$project->hdr#targetMode	AD
+$project->hdr#excludeIndel	F
+$project->hdr#excludeLowQuality	F
+$project->hdr#startDistance	10
+$project->hdr#endDistance	50
+$project->hdr#interval	10
+
+#annotation setting
+$project->annotation#genome->hg38
+hg19->cytoband	annotation/hg19.cytoband.bed
+hg38->cytoband	annotation/hg38.cytoband.bed
+hg19->chrominfo	annotation/hg19.chrom.sizes
+hg38->chrominfo	annotation/hg38.chrom.sizes
+hg19->gencode	annotation/hg19.gencode.bed
+hg38->gencode	annotation/hg38.gencode.bed

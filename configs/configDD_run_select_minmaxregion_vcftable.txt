@@ -1,12 +1,11 @@
 #project
-$project	testDDselect
+$project	testDD_run_select_minmaxregion_vcftable
 root->project	$project
 $project->project#indir		testdata/input
 
 #vcftable setting
 $project->vcftable#qvThreshold	50
-root->$project/vcftable	testdata/vcftable.txt
-$project->vcftable#selectBed	testdata/select.bed
+root->$project/vcftable	testdata/fulltable.txt
 
 #findrun setting
 $project->findrun#noIndel	F

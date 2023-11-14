@@ -11,19 +11,20 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2023/08/30";
+my $program_version="2023/11/08";
 ############################## OPTIONS ##############################
 use vars qw($opt_b $opt_h);
 getopts('b:h');
 ############################## HELP ##############################
 sub help{
   print STDERR "\n";
-  print STDERR "Command: $program_name [option] STATS TELOM ANNOT BED GENOME\n";
+  print STDERR "Command: $program_name [option] STATS TELOM ANNOT GENOME JS\n";
   print STDERR "Arguments:\n";
   print STDERR " STATS  Result from statdeRSl or maxstat\n";
   print STDERR " TELOM  Telomere BED file\n";
   print STDERR " ANNOT  Annotation BED file\n";
   print STDERR "GENOME  GENOME length file\n";
+  print STDERR "    JS  JavaScript file\n";
   print STDERR "\n";
   print STDERR "Options:\n";
   print STDERR "     -b  bed file used to limit VCF table regions\n";
@@ -110,20 +111,17 @@ sub getMetaDataFromFilename{
 	my $filename=shift();
 	my $assembly=shift();
 	my @metadata=();
-	my ($name,$other)=split(/\./,$filename);
-	my ($target,@metas)=split(/_/,$other);
-	push(@metadata,"target:$target");
+	my ($name,$target,$other)=split(/_(AD|AR|DD)/,$filename);
+	push(@metadata,"HDR mode: $target");
+	my @metas=split(/_/,$other);
 	foreach my $meta(@metas){
-		if($meta=~/pick(\d+)/){push(@metadata,"pick hits >: $1");next;}
-		if($meta=~/skip(\d+)/){push(@metadata,"skip/mismatch: $1");next;}
-		if($meta=~/min(\d+)/){push(@metadata,"minimum region size: $1");next;}
-		if($meta=~/max(\d+)/){push(@metadata,"maximum region size: $1");next;}
-		if($meta=~/top(\d+)/){push(@metadata,"top region selected: $1");next;}
-		if($meta=~/full/){push(@metadata,"output in full mode");next;}
-		if($meta=~/noindel/){push(@metadata,"skipping insertion deletion");next;}
-		if($meta=~/dd/){push(@metadata,"HDR mode: DD");next;}
-		if($meta=~/ar/){push(@metadata,"HDR mode: AR");next;}
-		if($meta=~/ad/){push(@metadata,"HDR mode: AD");next;}
+		if($meta=~/pick(\d+)i/){push(@metadata,"pick hits >: $1");next;}
+		if($meta=~/skip(\d+)i/){push(@metadata,"skip/mismatch: $1");next;}
+		if($meta=~/min(\d+)/i){push(@metadata,"minimum region size: $1");next;}
+		if($meta=~/max(\d+)/i){push(@metadata,"maximum region size: $1");next;}
+		if($meta=~/top(\d+)/i){push(@metadata,"top region selected: $1");next;}
+		if($meta=~/full/i){push(@metadata,"output in full mode");next;}
+		if($meta=~/noindel/i){push(@metadata,"skipping insertion deletion");next;}
 	}
 	return ($name,@metadata);
 }
@@ -289,49 +287,6 @@ sub printResult{
 	print "</table>\n";
 	print "</body>\n";
 	print "</html>\n";
-}
-############################## printTable ##############################
-sub printTable{
-	my @out=@_;
-	my $return_type=$out[0];
-	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
-	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
-	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
-	else{$return_type= 2;}
-	printTableSub($return_type,"",@out);
-}
-sub printTableSub{
-	my @out=@_;
-	my $return_type=shift(@out);
-	my $string=shift(@out);
-	my @output=();
-	for(@out){
-		if(ref( $_ ) eq "ARRAY"){
-			my @array=@{$_};
-			my $size=scalar(@array);
-			if($size==0){
-				if($return_type==0){print $string."[]\n";}
-				elsif($return_type==1){push(@output,$string."[]");}
-				elsif($return_type==2){print STDERR $string."[]\n";}
-			}else{
-				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
-			}
-		} elsif(ref($_)eq"HASH"){
-			my %hash=%{$_};
-			my @keys=sort{$a cmp $b}keys(%hash);
-			my $size=scalar(@keys);
-			if($size==0){
-				if($return_type==0){print $string."{}\n";}
-				elsif($return_type==1){push( @output,$string."{}");}
-				elsif($return_type==2){print STDERR $string."{}\n";}
-			}else{
-				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
-			}
-		}elsif($return_type==0){print "$string\"$_\"\n";}
-		elsif($return_type==1){push( @output,"$string\"$_\"");}
-		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
-	}
-	return wantarray?@output:$output[0];
 }
 ############################## readBedRegions ##############################
 sub readBedRegions{

@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2023/02/09";
+my $program_version="2023/11/08";
 ############################## OPTIONS ##############################
 use vars qw($opt_b $opt_d $opt_f $opt_h $opt_m $opt_o $opt_p $opt_r $opt_R $opt_s);
 getopts('bdfhm:o:p:r:R:s:');
@@ -24,6 +24,7 @@ sub help{
   print STDERR "  CASE  Case file/directory\n";
   print STDERR "Options:\n";
   print STDERR "    -b  Output in (b)ed format\n";
+  print STDERR "    -c  cytoband file for removing telomere\n";
   print STDERR "    -d  Exclude insertion/(d)eletion\n";
   print STDERR "    -f  (f)ull option\n";
   print STDERR "    -m  hom/het (m)ode stretch (default=hom)\n";
@@ -98,6 +99,47 @@ foreach my $tableFile(@tableFiles){
 print STDERR "Total number of regions: $regionCount\n";
 foreach my $writer(@{$writers}){close($writer->[2]);}
 print STDERR "Completed\n";
+############################## selectRegions ##############################
+sub selectRegions{
+    my $vcfFile=shift();
+    my $regions=shift();
+    my $reader=openFile($vcfFile);
+    my $preChr;
+    my $region;
+    my $label=<$reader>;
+    while(<$reader>){
+        chomp;
+		s/\r//g;
+        my ($chr,$position,@counts)=split(/\t/);
+        if($preChr ne $chr){$region=exists($regions->{$chr})?$regions->{$chr}:undef;$preChr=$chr;}
+        if(!defined($region)){next;}
+        my ($start,$end)=@{$region->[0]};
+        while($end<$position){
+            shift(@{$region});
+            if(scalar(@{$region})<1){$region=undef;delete($regions->{$chr});last;}
+            ($start,$end)=@{$region->[0]};
+        }
+        if(!defined($region)){next;}
+        if($position<$start){next;}
+        print "$chr\t$position\t".join("\t",@counts)."\n";
+    }
+    close($reader);
+}
+############################## readBedFile ##############################
+sub readBedFile{
+    my $file=shift();
+    my $reader=openFile($file);
+    my $regions={};
+    while(<$reader>){
+        chomp;
+		s/\r//g;
+        my ($chr,$start,$end,@tokens)=split(/\t/);
+        if(!defined($regions->{$chr})){$regions->{$chr}=[];}
+        push(@{$regions->{$chr}},[$start,$end]);
+    }
+    close($reader);
+    return $regions;
+}
 ############################## absolutePath ##############################
 sub absolutePath{
 	my $path=shift();
@@ -186,6 +228,16 @@ sub checkRegion{
   }
   return $count;
 }
+############################## getBasename ##############################
+sub getBasename{
+  my $file=shift();
+  my $basename=basename($file);
+  if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
+  elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
+  return $basename;
+}
 ############################## getDate ##############################
 sub getDate{
 	my $delim=shift();
@@ -199,6 +251,35 @@ sub getDate{
 	my $day=$time->mday;
 	if($day<10){$day="0".$day;}
 	return $year.$delim.$month.$delim.$day;
+}
+############################## getFiles ##############################
+sub getFiles{
+	my $directory=shift();
+	my $grep=shift();
+	my @files=();
+	opendir(DIR,$directory);
+	if(ref($grep)eq"ARRAY"){
+		foreach my $file(readdir(DIR)){
+			if($file=~/^\./){next;}
+			if($file eq""){next;}
+			my $path="$directory/$file";
+			if(-d $path){next;}
+			my $hit=0;
+			foreach my $g(@{$grep}){if($path=~/$g/){$hit=1;}}
+			if($hit){push(@files,$path);}
+		}
+	}else{
+		foreach my $file(readdir(DIR)){
+			if($file=~/^\./){next;}
+			if($file eq""){next;}
+			my $path="$directory/$file";
+			if(-d $path){next;}
+			if(defined($grep)&&$path!~/$grep/){next;}
+			push(@files,$path);
+		}
+	}
+	closedir(DIR);
+  return sort{$a cmp $b}@files;
 }
 ############################## listFiles ##############################
 sub listFiles{
@@ -222,16 +303,6 @@ sub listFiles{
 		closedir(DIR);
 	}
 	return sort(@input_files);
-}
-############################## getBasename ##############################
-sub getBasename{
-  my $file=shift();
-  my $basename=basename($file);
-  if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
-  return $basename;
 }
 ############################## matchIndex ##############################
 sub matchIndex{
@@ -315,35 +386,6 @@ sub openFile{
 		else{return IO::File->new($path);}
 	}
 }
-############################## getFiles ##############################
-sub getFiles{
-	my $directory=shift();
-	my $grep=shift();
-	my @files=();
-	opendir(DIR,$directory);
-	if(ref($grep)eq"ARRAY"){
-		foreach my $file(readdir(DIR)){
-			if($file=~/^\./){next;}
-			if($file eq""){next;}
-			my $path="$directory/$file";
-			if(-d $path){next;}
-			my $hit=0;
-			foreach my $g(@{$grep}){if($path=~/$g/){$hit=1;}}
-			if($hit){push(@files,$path);}
-		}
-	}else{
-		foreach my $file(readdir(DIR)){
-			if($file=~/^\./){next;}
-			if($file eq""){next;}
-			my $path="$directory/$file";
-			if(-d $path){next;}
-			if(defined($grep)&&$path!~/$grep/){next;}
-			push(@files,$path);
-		}
-	}
-	closedir(DIR);
-  return sort{$a cmp $b}@files;
-}
 ############################## openTable ##############################
 sub openTable{
   my $file=shift();
@@ -361,49 +403,6 @@ sub openTable{
   $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   return ([$reader,\@tokens],\@names);
-}
-############################## printTable ##############################
-sub printTable{
-	my @out=@_;
-	my $return_type=$out[0];
-	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
-	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
-	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
-	else{$return_type= 2;}
-	printTableSub($return_type,"",@out);
-}
-sub printTableSub{
-	my @out=@_;
-	my $return_type=shift(@out);
-	my $string=shift(@out);
-	my @output=();
-	for(@out){
-		if(ref( $_ ) eq "ARRAY"){
-			my @array=@{$_};
-			my $size=scalar(@array);
-			if($size==0){
-				if($return_type==0){print $string."[]\n";}
-				elsif($return_type==1){push(@output,$string."[]");}
-				elsif($return_type==2){print STDERR $string."[]\n";}
-			}else{
-				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
-			}
-		} elsif(ref($_)eq"HASH"){
-			my %hash=%{$_};
-			my @keys=sort{$a cmp $b}keys(%hash);
-			my $size=scalar(@keys);
-			if($size==0){
-				if($return_type==0){print $string."{}\n";}
-				elsif($return_type==1){push( @output,$string."{}");}
-				elsif($return_type==2){print STDERR $string."{}\n";}
-			}else{
-				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
-			}
-		}elsif($return_type==0){print "$string\"$_\"\n";}
-		elsif($return_type==1){push( @output,"$string\"$_\"");}
-		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
-	}
-	return wantarray?@output:$output[0];
 }
 ############################## sortSubs ##############################
 sub sortSubs{

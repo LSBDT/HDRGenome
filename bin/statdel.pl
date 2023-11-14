@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/27";
+my $program_version="2023/11/08";
 ############################## OPTIONS ##############################
 use vars qw($opt_a $opt_b $opt_h $opt_o);
 getopts('a:b:ho:');
@@ -256,49 +256,6 @@ sub prepareParamStatdel{
 	print $writer "$output\n";
 	close($writer);
 	return $tmp;
-}
-############################## printTable ##############################
-sub printTable{
-	my @out=@_;
-	my $return_type=$out[0];
-	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
-	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
-	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
-	else{$return_type= 2;}
-	printTableSub($return_type,"",@out);
-}
-sub printTableSub{
-	my @out=@_;
-	my $return_type=shift(@out);
-	my $string=shift(@out);
-	my @output=();
-	for(@out){
-		if(ref( $_ ) eq "ARRAY"){
-			my @array=@{$_};
-			my $size=scalar(@array);
-			if($size==0){
-				if($return_type==0){print $string."[]\n";}
-				elsif($return_type==1){push(@output,$string."[]");}
-				elsif($return_type==2){print STDERR $string."[]\n";}
-			}else{
-				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
-			}
-		} elsif(ref($_)eq"HASH"){
-			my %hash=%{$_};
-			my @keys=sort{$a cmp $b}keys(%hash);
-			my $size=scalar(@keys);
-			if($size==0){
-				if($return_type==0){print $string."{}\n";}
-				elsif($return_type==1){push( @output,$string."{}");}
-				elsif($return_type==2){print STDERR $string."{}\n";}
-			}else{
-				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
-			}
-		}elsif($return_type==0){print "$string\"$_\"\n";}
-		elsif($return_type==1){push( @output,"$string\"$_\"");}
-		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
-	}
-	return wantarray?@output:$output[0];
 }
 ############################## runProgram ##############################
 sub runProgram{

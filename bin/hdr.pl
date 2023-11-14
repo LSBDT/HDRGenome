@@ -11,17 +11,16 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2022/08/27";
+my $program_version="2023/11/08";
 ############################## OPTIONS ##############################
 use vars qw($opt_d $opt_e $opt_h $opt_i $opt_l $opt_o $opt_s $opt_t);
 getopts('de:hi:lo:s:t:');
 ############################## HELP ##############################
 sub help{
-  print STDERR "Command: $program_name [OPTIONS] TABLE CASE CTRL POS\n";
+  print STDERR "Command: $program_name [OPTIONS] TABLE CASE POS [POS2 ..]\n";
   print STDERR "Arguments:\n";
   print STDERR " TABLE  Table file from vcftable.pl\n";
   print STDERR "  CASE  Case file/directory\n";
-  print STDERR "  CTRL  Control file/directory\n";
   print STDERR "   POS  Position/region file\n";
   print STDERR "Options:\n";
   print STDERR "    -d  excluded/skip indel hom/het\n";
@@ -40,8 +39,11 @@ sub help{
   print STDERR "    http://samtools.github.io/bcftools/bcftools.html\n";
   print STDERR "\n";
   print STDERR "    Position format is 'CHROM POS' (tab delim)\n";
-  print STDERR "    Chromosome can be number or or chr+number.\n";
-  print STDERR "    For example, '1' or 'chr1'\n";
+  print STDERR "    Region format is 'CHROM START END' (tab delim)\n";
+  print STDERR "    Chromosome can be either number or 'chr'+number.\n";
+  print STDERR "    For example: '1' or 'chr1'\n";
+  print STDERR "    Multiple case names can be specified by ','\n";
+  print STDERR "    Control names are retrieved from vcf table\n";
   print STDERR "\n";
   print STDERR "Author: akira.hasegawa\@riken.jp\n";
   print STDERR "Update: $program_version\n";
@@ -57,16 +59,16 @@ my $ctrlNames=retrieveCtrlNamesFromTable($tableFile);
 $ctrlNames=removeCaseFromCtrl($caseNames,$ctrlNames);
 print STDERR "==================== setting ====================\n";
 if(scalar(@{$caseNames})==0){
-  print STDERR "ERROR  Number of case file is 0.";
-  print STDERR "ERROR  Make sure you specify correct case files in the command line.\n";
+  print STDERR "ERROR  Number of case is 0.";
+  print STDERR "ERROR  Make sure you specify correct case names in the command line.\n";
   exit(1);
 }else{
   print STDERR "Cases: ".scalar(@{$caseNames})."\n";
   foreach my $case(@{$caseNames}){print STDERR "  $case\n";}
 }
 if(scalar(@{$ctrlNames})==0){
-  print STDERR "ERROR  Number of control file is 0.";
-  print STDERR "ERROR  Make sure you specify correct control files in the command line.\n";
+  print STDERR "ERROR  Number of control is 0.";
+  print STDERR "ERROR  Make sure you specify correct control names in the VCF table.\n";
   exit(1);
 }else{
   print STDERR "Controls: ".scalar(@{$ctrlNames})."\n";
@@ -83,7 +85,7 @@ if(scalar(@posFiles)==0){
 my $outdir=(defined($opt_o))?$opt_o:"out";
 my $noindel=$opt_d;
 my $nolowqc=$opt_l;
-my $targetMode=(defined($opt_t))?lc($opt_t):"ar";
+my $targetMode=(defined($opt_t))?uc($opt_t):"AR";
 my $windowInterval=(defined($opt_i))?$opt_i:10;
 my $windowStart=(defined($opt_s))?$opt_s:10;
 my $windowEnd=(defined($opt_e))?$opt_e:50;
@@ -101,15 +103,10 @@ for(my $i=0;$i<scalar(@{$caseNames});$i++){
   my $matchName=$matchNames->[$i];
   mkdir("$outdir/$caseName");
   foreach my $posFile(@posFiles){
-    my $basename=basename($posFile,".txt");
-    my $label=createLabel($caseName,$ctrlNames,$posFile,$windowStart,$windowEnd,$windowInterval);
-    my $outFile;
-    if($targetMode ne "dd"){$outFile="${basename}_${targetMode}_${windowStart}_${windowEnd}_${windowInterval}";}
-    else{$outFile="${basename}_${targetMode}";}
+    my ($label,$outFile)=createLabel($caseName,$ctrlNames,$posFile,$windowStart,$windowEnd,$windowInterval);
     if(defined($noindel)){$outFile.="_noindel";}
     if(defined($nolowqc)){$outFile.="_nolowqc";}
-    $outFile.=".txt";
-    $outFile="$outdir/$caseName/$outFile";
+    $outFile="$outdir/$caseName/$outFile.txt";
     calculateHDR($matchName,$targetMode,$noindel,$nolowqc,$tableFile,$posFile,$label,$outFile,$windowStart,$windowEnd,$windowInterval);
   }
 }
@@ -183,17 +180,17 @@ sub calculateHDR{
             my $f1=($flag1&3);
             my $f2=($flag2&3);
             if($window->[0]<=$posit&&$posit<=$window->[1]){
-              if($targetMode eq "ar"){
+              if($targetMode eq "AR"){
                 if($f1==2||$f2==2){
                   $results->[$i]->[$j]->[0]++;
                   if($f1!=$f2){$results->[$i]->[$j]->[1]++;}
                 }
-              }elsif($targetMode eq "dd"){
+              }elsif($targetMode eq "DD"){
                 if($f1==1||$f2==1){
                   $results->[$i]->[$j]->[0]++;
                   if($f1!=$f2){$results->[$i]->[$j]->[1]++;}
                 }
-              }elsif($targetMode eq "ad"){
+              }elsif($targetMode eq "AD"){
                 if($f1>0||$f2>0){
                   $results->[$i]->[$j]->[0]++;
                   if($f1!=$f2){$results->[$i]->[$j]->[1]++;}
@@ -271,17 +268,17 @@ sub calculateHDR{
           my ($chrom,$posit,$flag1,$flag2)=@{$hit};
           my $f1=($flag1&3);
           my $f2=($flag2&3);
-          if($targetMode eq "ar"){
+          if($targetMode eq "AR"){
             if($f1==2||$f2==2){
               $results->[$i]->[0]++;
               if($f1!=$f2){$results->[$i]->[1]++;}
             }
-          }elsif($targetMode eq "dd"){
+          }elsif($targetMode eq "DD"){
             if($f1==1||$f2==1){
               $results->[$i]->[0]++;
               if($f1!=$f2){$results->[$i]->[1]++;}
             }
-          }elsif($targetMode eq "ad"){
+          }elsif($targetMode eq "AD"){
             if($f1>0||$f2>0){
               $results->[$i]->[0]++;
               if($f1!=$f2){$results->[$i]->[1]++;}
@@ -341,9 +338,18 @@ sub createLabel{
   close(IN);
   chomp($label);
   $label=~s/\r//g;
+  my $basename=basename($posFile,".txt");
   my @tokens=split(/\t/,$label);
-  my $size=(scalar(@tokens)>2)?1:int(($windowEnd-$windowStart)/$windowInterval)+1;
-  return "$count $ctrlCount $size # 1:chr1";
+  my $size;
+  my $outFile;
+  if(scalar(@tokens)>2){#chr,start,end
+    $size=1;
+    $outFile="${basename}_${targetMode}";
+  }else{#chr,pos
+    $size=int(($windowEnd-$windowStart)/$windowInterval)+1;
+    $outFile="${basename}_${targetMode}_${windowStart}_${windowEnd}_${windowInterval}";
+  }
+  return ("$count $ctrlCount $size # 1:chr1",$outFile);
 }
 ############################## getDate ##############################
 sub getDate{
@@ -508,49 +514,6 @@ sub openTable{
   $line=~s/\r//g;
   my @tokens=split(/\t/,$line);
   return [$reader,\@tokens];
-}
-############################## printTable ##############################
-sub printTable{
-	my @out=@_;
-	my $return_type=$out[0];
-	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
-	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
-	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
-	else{$return_type= 2;}
-	printTableSub($return_type,"",@out);
-}
-sub printTableSub{
-	my @out=@_;
-	my $return_type=shift(@out);
-	my $string=shift(@out);
-	my @output=();
-	for(@out){
-		if(ref($_)eq"ARRAY"){
-			my @array=@{$_};
-			my $size=scalar(@array);
-			if($size==0){
-				if($return_type==0){print $string."[]\n";}
-				elsif($return_type==1){push(@output,$string."[]");}
-				elsif($return_type==2){print STDERR $string."[]\n";}
-			}else{
-				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
-			}
-		} elsif(ref($_)eq"HASH"){
-			my %hash=%{$_};
-			my @keys=sort{$a cmp $b}keys(%hash);
-			my $size=scalar(@keys);
-			if($size==0){
-				if($return_type==0){print $string."{}\n";}
-				elsif($return_type==1){push( @output,$string."{}");}
-				elsif($return_type==2){print STDERR $string."{}\n";}
-			}else{
-				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
-			}
-		}elsif($return_type==0){print "$string\"$_\"\n";}
-		elsif($return_type==1){push( @output,"$string\"$_\"");}
-		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
-	}
-	return wantarray?@output:$output[0];
 }
 ############################## removeCaseFromCtrl ##############################
 sub removeCaseFromCtrl{

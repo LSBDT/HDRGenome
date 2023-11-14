@@ -24,6 +24,7 @@ sub help{
   print STDERR "  CASE  Case file/directory\n";
   print STDERR "GENOME  Genome lengths\n";
   print STDERR "Options:\n";
+  print STDERR "    -c  cytoband file for removing telomere\n";
   print STDERR "    -d  Exclude insertion/deletion\n";
   print STDERR "    -m  hom/het stretch (default=hom)\n";
   print STDERR "    -o  outdir (default=STDOUT)\n";
@@ -48,6 +49,7 @@ my $topX=defined($opt_t)?$opt_t:10;
 my $bedfile=createBed($tableFile,$basename,$genomeFile,$noIndel,$stretchMode,$regionSize);
 my $groups=groupByDepth($bedfile);
 my $writer=fileWriter($opt_o,$basename,$noIndel,$stretchMode,$regionSize,$topX);
+
 pickTopX($writer,$topX,$groups);
 ############################## absolutePath ##############################
 sub absolutePath{
