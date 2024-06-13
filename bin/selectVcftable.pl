@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2023/11/10";
+my $program_version="2024/06/13";
 ############################## OPTIONS ##############################
 use vars qw($opt_c $opt_C $opt_f $opt_g $opt_h $opt_o $opt_r $opt_s $opt_S $opt_u $opt_v);
 getopts('cCfgho:rsSuv');
@@ -71,8 +71,8 @@ sub convertFromBed{
 	}elsif($format eq "vcftable"){
 		while(<$reader>){
 			chomp;s/\r//g;
-			my ($chr,$start,$end,@counts)=split(/\t/);
-			print $writer "$chr\t$start\t".join("\t",@counts)."\n";
+			my ($chr,$start,$end,$ref,$alt,@counts)=split(/\t/);
+			print $writer "$chr\t$start\t$ref\t$alt\t".join("\t",@counts)."\n";
 		}
 	}
 	close($writer);
@@ -85,7 +85,7 @@ sub convertToBed{
 	my $reader=openFile($file);
 	#CHROM	POS (position)
 	#Chr	Start	End (region)
-	#chromosome	position	NA18939_v2 .. (vcftable)
+	#chromosome	position reference alternative	NA18939_v2 .. (vcftable)
 	my $label=<$reader>;
 	chomp($label);
     my $format;
@@ -98,11 +98,11 @@ sub convertToBed{
 		print STDERR "Error: $file is not a valid file\n";
 		exit(1);
 	}
-    if(!defined($format)){
-        if(scalar(@tokens)==2){$format="position";}
-        elsif(scalar(@tokens)==3){$format="region";}
-        elsif(scalar(@tokens>=4)){$format="vcftable";}
-    }
+		if(!defined($format)){
+			if(scalar(@tokens)==2){$format="position";}
+			elsif(scalar(@tokens)==3){$format="region";}
+			elsif(scalar(@tokens>=4)){$format="vcftable";}
+		}
 	my ($writer,$tmpfile)=tempfile(TEMPLATE=>"${format}_XXXXXX",DIR=>"/tmp",SUFFIX=>".bed",UNLINK=>1);
 	if($format eq "position"){
 		while(<$reader>){
@@ -119,8 +119,8 @@ sub convertToBed{
 	}elsif($format eq "vcftable"){
 		while(<$reader>){
 			chomp;s/\r//g;
-			my ($chr,$position,@counts)=split(/\t/);
-			print $writer "$chr\t$position\t".($position+1)."\t".join("\t",@counts)."\n";
+			my ($chr,$position,$ref,$alt,@counts)=split(/\t/);
+			print $writer "$chr\t$position\t".($position+1)."\t$ref\t$alt\t".join("\t",@counts)."\n";
 		}
 	}
 	close($reader);
@@ -163,7 +163,7 @@ sub intersectBed{
 	my $bedFileA=shift();
 	my $bedFileB=shift();
 	my $format=getFormatFromFilename($bedFileA);
-	my $command="intersectBed -wa";
+	my $command="bedtools intersect -wa";
 	my $booleanV=0;
 	if(defined($opt_u)){$command.=" -u";}
 	if(defined($opt_c)){$command.=" -c";}

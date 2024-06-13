@@ -11,43 +11,45 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2023/11/08";
+my $program_version="2024/06/13";
 ############################## OPTIONS ##############################
 use vars qw($opt_b $opt_d $opt_f $opt_h $opt_m $opt_o $opt_p $opt_r $opt_R $opt_s);
 getopts('bdfhm:o:p:r:R:s:');
 ############################## HELP ##############################
 sub help{
-  print STDERR "\n";
-  print STDERR "Command: $program_name [option] TABLE CASE\n";
-  print STDERR "Arguments:\n";
-  print STDERR " TABLE  Table from vcftable.pl\n";
-  print STDERR "  CASE  Case file/directory\n";
-  print STDERR "Options:\n";
-  print STDERR "    -b  Output in (b)ed format\n";
-  print STDERR "    -c  cytoband file for removing telomere\n";
-  print STDERR "    -d  Exclude insertion/(d)eletion\n";
-  print STDERR "    -f  (f)ull option\n";
-  print STDERR "    -m  hom/het (m)ode stretch (default=hom)\n";
-  print STDERR "    -o  (o)utput directory (default='out')\n";
-  print STDERR "    -p  (p)ickup number (default>=1)\n";
-  print STDERR "    -r  Minimum (r)egion size (default=1,000,000bp)\n";
-  print STDERR "    -R  Maximum (R)egion size\n";
-  print STDERR "    -s  (s)kip count (default=0)\n";
-  print STDERR "\n";
-  print STDERR "Author: akira.hasegawa\@riken.jp\n";
-  print STDERR "Update: $program_version\n";
-  print STDERR "\n";
-  print STDERR "Example: $program_name -b -d -f -m het -o output -p 2 -r 2000000 -s 2 fulltable.txt case\n";
-  print STDERR "  - Output in BED format\n";
-  print STDERR "  - Exclude indel from calculation\n";
-  print STDERR "  - Output in full format (additional length, hit and detail columns)\n";
-  print STDERR "  - het stretch mode\n";
-  print STDERR "  - Write files to output directory\n";
-  print STDERR "  - Needs at least two matches in between\n";
-  print STDERR "  - Region length have to be more than 2000000 bp\n";
-  print STDERR "  - Accept region upto two mismatch\n";
-  print STDERR "  - fulltable.txt from vcftable.pl output\n";
-  print STDERR "  - VCF files under case directory\n";
+	print STDERR "\n";
+	print STDERR "Command: $program_name [option] TABLE CASE\n";
+	print STDERR "Arguments:\n";
+	print STDERR " TABLE  Table from vcftable.pl\n";
+	print STDERR "  CASE  Case file/directory\n";
+	print STDERR "Options:\n";
+	print STDERR "    -b  Output in (b)ed format\n";
+	print STDERR "    -c  cytoband file for removing telomere\n";
+	print STDERR "    -d  Exclude insertion/(d)eletion\n";
+	print STDERR "    -f  (f)ull option\n";
+	print STDERR "    -h  Display this (h)elp\n";
+	print STDERR "    -m  hom/het/dup (m)ode stretch (default=hom)\n";
+	print STDERR "    -o  (o)utput directory (default='out')\n";
+	print STDERR "    -p  (p)ickup number (default>=1)\n";
+	print STDERR "    -r  Minimum (r)egion size (default=1,000,000bp)\n";
+	print STDERR "    -R  Maximum (R)egion size\n";
+	print STDERR "    -s  (s)kip count (default=0)\n";
+	print STDERR "\n";
+	print STDERR "Author: akira.hasegawa\@riken.jp\n";
+	print STDERR "Update: $program_version\n";
+	print STDERR "\n";
+	print STDERR "Example: $program_name -b -d -f -m het -o output -p 2 -r 2000000 -s 2 fulltable.txt case\n";
+	print STDERR "  - Output in BED format\n";
+	print STDERR "  - Exclude indel from calculation\n";
+	print STDERR "  - Output in full format (additional length, hit and detail columns)\n";
+	print STDERR "  - het stretch mode\n";
+	print STDERR "  - Write files to output directory\n";
+	print STDERR "  - Needs at least two matches in between\n";
+	print STDERR "  - Region length have to be more than 2000000 bp\n";
+	print STDERR "  - Accept region upto two mismatch\n";
+	print STDERR "  - fulltable.txt from vcftable.pl output\n";
+	print STDERR "  - VCF files under case directory\n";
+	print STDERR "\n";
 }
 ############################## MAIN ##############################
 if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
@@ -65,18 +67,18 @@ my $bedformat=$opt_b;
 my $fullMode=$opt_f;
 my $outdir=(defined($opt_o))?$opt_o:"out";
 if(scalar(@caseNames)==0){
-  print STDERR "\n";
-  print STDERR "ERROR  No VCF files were found.\n";
-  print STDERR "ERROR  Make sure you specify correct CASE file(s)/directory in the command line.\n";
-  help();
-  exit(1);
+	print STDERR "\n";
+	print STDERR "ERROR  No VCF files were found.\n";
+	print STDERR "ERROR  Make sure you specify correct CASE file(s)/directory in the command line.\n";
+	help();
+	exit(1);
 }
 if(!-e $filepath){
-  print STDERR "\n";
-  print STDERR "ERROR  Table file '$filepath' doesn't exist.\n";
-  print STDERR "ERROR  Make sure you specify correct TABLE in the command line.\n";
-  help();
-  exit(1);
+	print STDERR "\n";
+	print STDERR "ERROR  Table file '$filepath' doesn't exist.\n";
+	print STDERR "ERROR  Make sure you specify correct TABLE in the command line.\n";
+	help();
+	exit(1);
 }
 mkdir($outDir);
 #go through files
@@ -86,60 +88,19 @@ if(-d $filepath){@tableFiles=getFiles($filepath);}
 else{@tableFiles=($filepath);}
 my $writers;
 foreach my $tableFile(@tableFiles){
-  my ($handler,$labels)=openTable($tableFile);
-  if(!defined($writers)){
-    $writers=matchIndex(\@caseNames,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
-  }
-  while(!eof($handler->[0])){
-    $regionCount+=checkRegion(nextTable($handler,$noindel),$writers,$stretchMode,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
-    $regionCount++;
-    if($regionCount%10000==0){print STDERR "$regionCount...\n";}
-  }
+	my ($handler,$labels)=openTable($tableFile);
+	if(!defined($writers)){
+		$writers=matchIndex(\@caseNames,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
+	}
+	while(!eof($handler->[0])){
+		$regionCount+=checkRegion(nextTable($handler,$writers,$noindel),$writers,$stretchMode,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
+		$regionCount++;
+		if($regionCount%10000==0){print STDERR "$regionCount...\n";}
+	}
 }
 print STDERR "Total number of regions: $regionCount\n";
 foreach my $writer(@{$writers}){close($writer->[2]);}
 print STDERR "Completed\n";
-############################## selectRegions ##############################
-sub selectRegions{
-    my $vcfFile=shift();
-    my $regions=shift();
-    my $reader=openFile($vcfFile);
-    my $preChr;
-    my $region;
-    my $label=<$reader>;
-    while(<$reader>){
-        chomp;
-		s/\r//g;
-        my ($chr,$position,@counts)=split(/\t/);
-        if($preChr ne $chr){$region=exists($regions->{$chr})?$regions->{$chr}:undef;$preChr=$chr;}
-        if(!defined($region)){next;}
-        my ($start,$end)=@{$region->[0]};
-        while($end<$position){
-            shift(@{$region});
-            if(scalar(@{$region})<1){$region=undef;delete($regions->{$chr});last;}
-            ($start,$end)=@{$region->[0]};
-        }
-        if(!defined($region)){next;}
-        if($position<$start){next;}
-        print "$chr\t$position\t".join("\t",@counts)."\n";
-    }
-    close($reader);
-}
-############################## readBedFile ##############################
-sub readBedFile{
-    my $file=shift();
-    my $reader=openFile($file);
-    my $regions={};
-    while(<$reader>){
-        chomp;
-		s/\r//g;
-        my ($chr,$start,$end,@tokens)=split(/\t/);
-        if(!defined($regions->{$chr})){$regions->{$chr}=[];}
-        push(@{$regions->{$chr}},[$start,$end]);
-    }
-    close($reader);
-    return $regions;
-}
 ############################## absolutePath ##############################
 sub absolutePath{
 	my $path=shift();
@@ -161,82 +122,87 @@ sub absolutePath{
 #het het het het hom
 #|-------------|
 sub checkRegion{
-  my $positions=shift();
-  my $writers=shift();
-  my $stretchMode=shift();
-  my $pickupNumber=shift();
-  my $minRegionSize=shift();
-  my $maxRegionSize=shift();
-  my $skipCount=shift();
-  my $fullMode=shift();
-  my $bedFormat=shift();
-  my $startFlag=($stretchMode eq "hom")?2:1;
-  my $endFlag=($stretchMode eq "hom")?1:2;
-  my $size=scalar(@{$positions});
-  my $count=0;
-  foreach my $handler(@{$writers}){
-    my $label=$handler->[0];
-    my $index=$handler->[1];
-    my $writer=$handler->[2];
-    my $lastChromosome;
-    my $lastEnd;
-    for(my $i=0;$i<$size;$i++){
-      my $chromosome=$positions->[$i]->[0];
-      my $start=$positions->[$i]->[1];
-      my $flag=$positions->[$i]->[$index];
-      if(($flag&$startFlag)>0){#start search
-        my $string=$flag;
-        my $end=$start;
-        my $match=0;
-        my $mismatch=0;
-        for(my $j=$i+1;$j<$size;$j++){
-          my $length=$end-$start+1;
-          my $flag2=$positions->[$j]->[$index];
-          if(($flag2&$startFlag)>0){#continue search
-            $end=$positions->[$j]->[1];
-            $match++;
-          }elsif(($flag2&$endFlag)>0){#end search
-            if($mismatch<$skipCount){#search more
-              if($flag2>0){$string.=" $flag2";}
-              $mismatch++;
-              next;
-            }
-            if($length<$minRegionSize){last;}
-            if(defined($maxRegionSize)&&$length>$maxRegionSize){last;}
-            if($match<=$pickupNumber){last;}
-            if($chromosome eq $lastChromosome && $end == $lastEnd){last;}
-            if($bedFormat){
-              my $s=$start-1;
-              my $name="$chromosome:$s-$end";
-              if($match>1000){$match=1000;}
-              print $writer "$chromosome\t$s\t$end\t$name\t$match\n";
-            }else{
-              print $writer "$chromosome\t$start\t$end";
-              $match--;
-              if(defined($fullMode)){print $writer "\t$length\t$match\t$mismatch\t$string";}
-              print $writer "\n";
-            }
-            $lastEnd=$end;
-            $lastChromosome=$chromosome;
-            $count++;
-            last;
-          }
-          if($flag2>0){$string.=" $flag2";}
-        }
-      }
-    }
-  }
-  return $count;
+	my $positions=shift();
+	my $writers=shift();
+	my $stretchMode=shift();
+	my $pickupNumber=shift();
+	my $minRegionSize=shift();
+	my $maxRegionSize=shift();
+	my $skipCount=shift();
+	my $fullMode=shift();
+	my $bedFormat=shift();
+	my $startFlag=($stretchMode eq "hom")?2:1;
+	my $endFlag=($stretchMode eq "hom")?1:2;
+	if($stretchMode eq "dup"){
+		$startFlag=512;
+		$endFlag=2;
+	}
+	my $size=scalar(@{$positions});
+	my $count=0;
+	my $index=0;
+	foreach my $handler(@{$writers}){
+		my $label=$handler->[0];
+		$index+=1;#=$handler->[1];
+		my $writer=$handler->[2];
+		my $lastChromosome;
+		my $lastEnd;
+		for(my $i=0;$i<$size;$i++){
+			my $chromosome=$positions->[$i]->[0];
+			my $start=$positions->[$i]->[1];
+			my $flag=$positions->[$i]->[$index];
+			if(($flag&$startFlag)>0){#start search
+				my $string=$flag;
+				my $end=$start;
+				my $match=0;
+				my $mismatch=0;
+				for(my $j=$i+1;$j<$size;$j++){
+					my $length=$end-$start+1;
+					my $flag2=$positions->[$j]->[$index];
+					if(($flag2&$startFlag)>0){#continue search
+						$end=$positions->[$j]->[1];
+						$match++;
+					}elsif(($flag2&$endFlag)>0){#end search
+						if($mismatch<$skipCount){#search more
+							if($flag2>0){$string.=" $flag2";}
+							$mismatch++;
+							next;
+						}
+						if($length<$minRegionSize){last;}
+						if(defined($maxRegionSize)&&$length>$maxRegionSize){last;}
+						if($match<=$pickupNumber){last;}
+						if($chromosome eq $lastChromosome && $end == $lastEnd){last;}
+						if($bedFormat){
+							my $s=$start-1;
+							my $name="$chromosome:$s-$end";
+							if($match>1000){$match=1000;}
+							print $writer "$chromosome\t$s\t$end\t$name\t$match\n";
+						}else{
+							print $writer "$chromosome\t$start\t$end";
+							$match--;
+							if(defined($fullMode)){print $writer "\t$length\t$match\t$mismatch\t$string";}
+							print $writer "\n";
+						}
+						$lastEnd=$end;
+						$lastChromosome=$chromosome;
+						$count++;
+						last;
+					}
+					if($flag2>0){$string.=" $flag2";}
+				}
+			}
+		}
+	}
+	return $count;
 }
 ############################## getBasename ##############################
 sub getBasename{
-  my $file=shift();
-  my $basename=basename($file);
-  if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
-  elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
-  return $basename;
+	my $file=shift();
+	my $basename=basename($file);
+	if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
+	elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
+	elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
+	elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
+	return $basename;
 }
 ############################## getDate ##############################
 sub getDate{
@@ -306,70 +272,74 @@ sub listFiles{
 }
 ############################## matchIndex ##############################
 sub matchIndex{
-  my $files=shift();
-  my $labels=shift();
-  my $outDir=shift();
-  my $stretchMode=shift();
-  my $noindel=shift();
-  my $pickupNumber=shift();
-  my $minRegionSize=shift();
-  my $maxRegionSize=shift();
-  my $skipCount=shift();
-  my $fullMode=shift();
-  my $bedformat=shift();
-  my $names={};
-  foreach my $file(@{$files}){
-    my $basename=basename($file);
-    if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
-    elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
-    $names->{$basename}=1;
-  }
-  my @array=();
-  for(my $i=0;$i<scalar(@{$labels});$i++){
-    my $label=$labels->[$i];
-    if(!exists($names->{$label})){next;}
-    my $filename="$label.${stretchMode}_pick${pickupNumber}_skip${skipCount}";
-    if(defined($maxRegionSize)){$filename.="_min${minRegionSize}_max${maxRegionSize}";}
-    else{$filename.="_min${minRegionSize}";}
-    if(defined($noindel)){$filename.="_noindel";}
-    if(defined($fullMode)){$filename.="_full";}
-    if(defined($bedformat)){$filename.=".bed";}
-    else{$filename.=".txt";}
-    my $writer=IO::File->new(">$outDir/$filename");
-    if(defined($bedformat)){}
-    elsif(defined($fullMode)){print $writer "#Chr\tStart\tEnd\tLength\tHit\tUnhit\tGenotype\n";}
-    else{print $writer "#Chr\tStart\tEnd\n";}
-    push(@array,[$label,$i+2,$writer]);
-  }
-  return \@array;
+	my $files=shift();
+	my $labels=shift();
+	my $outDir=shift();
+	my $stretchMode=shift();
+	my $noindel=shift();
+	my $pickupNumber=shift();
+	my $minRegionSize=shift();
+	my $maxRegionSize=shift();
+	my $skipCount=shift();
+	my $fullMode=shift();
+	my $bedformat=shift();
+	my $names={};
+	foreach my $file(@{$files}){
+			my $basename=basename($file);
+			if($basename=~/^(.+)\.g\.vcf$/i){$basename=$1}
+			elsif($basename=~/^(.+)\.vcf$/i){$basename=$1}
+			elsif($basename=~/^(.+)\.bcf$/i){$basename=$1}
+			elsif($basename=~/^(.+)\.avinput$/i){$basename=$1}
+			$names->{$basename}=1;
+	}
+	my @array=();
+	for(my $i=0;$i<scalar(@{$labels});$i++){
+			my $label=$labels->[$i];
+			if(!exists($names->{$label})){next;}
+			my $filename="$label.${stretchMode}_pick${pickupNumber}_skip${skipCount}";
+			if(defined($maxRegionSize)){$filename.="_min${minRegionSize}_max${maxRegionSize}";}
+			else{$filename.="_min${minRegionSize}";}
+			if(defined($noindel)){$filename.="_noindel";}
+			if(defined($fullMode)){$filename.="_full";}
+			if(defined($bedformat)){$filename.=".bed";}
+			else{$filename.=".txt";}
+			my $writer=IO::File->new(">$outDir/$filename");
+			if(defined($bedformat)){}
+			elsif(defined($fullMode)){print $writer "#Chr\tStart\tEnd\tLength\tHit\tUnhit\tGenotype\n";}
+			else{print $writer "#Chr\tStart\tEnd\n";}
+			push(@array,[$label,$i+2,$writer]);
+	}
+	return \@array;
 }
 ############################## nextTable ##############################
 sub nextTable{
-  my $handler=shift();
-  my $noindel=shift();
-  my $reader=$handler->[0];
-  my $next=$handler->[1];
-  if(!defined($next)){return ();}
-  my @data=@{$next};
-  my $chromosome=shift(@data);
-  my $position=shift(@data);
-  my @positions=([$chromosome,$position,@data]);
-  my $endReached=0;
-  my $chr;
-  my $pos;
-  while(<$reader>){
-    chomp;s/\r//g;
-    ($chr,$pos,@data)=split(/\t/);
-    if($chr ne $chromosome){$handler->[1]=[$chr,$pos,@data];last;}
-    if(defined($noindel)){#take care of indel
-      foreach my $d(@data){if(($d&4)>0||($d&8)>0){$d=0;}}
-    }
-    push(@positions,[$chr,$pos,@data]);
-  }
-  if(eof($reader)){close($reader);$handler->[1]=undef;}
-  return \@positions;
+	my $handler=shift();
+	my $writers=shift();
+	my $noindel=shift();
+	my @indeces=();
+	#These lines are added to reduce memory usage
+	foreach my $handler(@{$writers}){push(@indeces,$handler->[1]);}
+	my $reader=$handler->[0];
+	my $next=$handler->[1];
+	if(!defined($next)){return ();}
+	my @data=@{$next};
+	my $chromosome=shift(@data);
+	my $position=shift(@data);
+	my @positions=([$chromosome,$position,@data]);
+	my $endReached=0;
+	while(<$reader>){
+			chomp;s/\r//g;
+			my ($chr,$pos,$ref,$alt,@data)=split(/\t/);
+			my @temp=();
+			foreach my $index(@indeces){push(@temp,$data[$index-2]);}
+			if($chr ne $chromosome){$handler->[1]=[$chr,$pos,@temp];last;}
+			if(defined($noindel)){#take care of indel
+					foreach my $d(@data){if(($d&4)>0||($d&8)>0){$d=0;}}
+			}
+			push(@positions,[$chr,$pos,@temp]);
+	}
+	if(eof($reader)){close($reader);$handler->[1]=undef;}
+	return \@positions;
 }
 ############################## openFile ##############################
 sub openFile{
@@ -388,21 +358,24 @@ sub openFile{
 }
 ############################## openTable ##############################
 sub openTable{
-  my $file=shift();
-  my $reader;
-  if($file=~/\.g(ip)?z$/){$reader=IO::File->new("gzip -cd $file|");}
-  elsif($file=~/\.b(ip)?z2$/){$reader=IO::File->new("bzip2 -cd $file|");}
-  else{$reader=IO::File->new($file);}
-  my $line=<$reader>;
-  chomp($line);
-  $line=~s/\r//g;
-  my @names=split(/\t/,$line);
-  shift(@names);shift(@names);
-  $line=<$reader>;
-  chomp($line);
-  $line=~s/\r//g;
-  my @tokens=split(/\t/,$line);
-  return ([$reader,\@tokens],\@names);
+	my $file=shift();
+	my $reader;
+	if($file=~/\.g(ip)?z$/){$reader=IO::File->new("gzip -cd $file|");}
+	elsif($file=~/\.b(ip)?z2$/){$reader=IO::File->new("bzip2 -cd $file|");}
+	else{$reader=IO::File->new($file);}
+	my $line=<$reader>;
+	chomp($line);
+	$line=~s/\r//g;
+	my @names=split(/\t/,$line);
+	shift(@names);#chr
+	shift(@names);#pos
+	shift(@names);#ref
+	shift(@names);#alt
+	$line=<$reader>;
+	chomp($line);
+	$line=~s/\r//g;
+	my @tokens=split(/\t/,$line);
+	return ([$reader,\@tokens],\@names);
 }
 ############################## sortSubs ##############################
 sub sortSubs{

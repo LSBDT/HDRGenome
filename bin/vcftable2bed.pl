@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2023/01/19";
+my $program_version="2023/06/13";
 ############################## OPTIONS ##############################
 use vars qw($opt_h $opt_n);
 getopts('hn:');
@@ -22,12 +22,14 @@ chomp($line);
 $line=~s/\r//g;
 if($line=~/^#\s*(.+)$/){$line=$1;}
 my @labels=split(/\t/,$line);
-shift(@labels);
-shift(@labels);
+shift(@labels);#chr
+shift(@labels);#pos
+shift(@labels);#ref
+shift(@labels);#alt
 my $name=defined($opt_n)?$opt_n:"HDR";
 print "track name=\"$name\" description=\"$name\" itemRgb=\"On\"\n";
 while(<STDIN>){
-    my ($chr,$start,@data)=split(/\t/);
+    my ($chr,$start,$ref,$alt,@data)=split(/\t/);
     my $end=$start+1;
     my $size=scalar(@data);
     my $hetCount=0;

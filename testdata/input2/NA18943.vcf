@@ -1,0 +1,37 @@
+##fileformat=VCFv4.0
+##fileDate=19/11/13
+##phasing=none, though some calls involve phasing clustered variants
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=COV,Number=2,Type=Integer,Description="Number of reads on ref and alt alleles">
+##FORMAT=<ID=GT_CONF,Number=1,Type=Float,Description="Genotype confidence. Difference in log likelihood of most likely and next most likely genotype">
+##FORMAT=<ID=SITE_CONF,Number=1,Type=Float,Description="Probabilitic site classification confidence. Difference in log likelihood of most likely and next most likely model (models are variant, repeat and error)">
+##FORMAT=<ID=GL,Number=.,Type=Float,Description="Genotype Likelihood. Log likelihoods of all possible genotypes">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of variant">
+##ALT=<ID=SNP,Description="SNP">
+##ALT=<ID=SNP_FROM_COMPLEX,Description="SNP called from a cluster of phased SNPs or complex SNP/indel , split out for easier comparison with other SNP call sets">
+##ALT=<ID=DEL,Description="Deletion">
+##ALT=<ID=INS,Description="Insertion of novel sequence">
+##ALT=<ID=INDEL,Description="Insertion-deletion">
+##ALT=<ID=INV,Description="Inversion">
+##ALT=<ID=INV_INDEL,Description="Inversion+indel - this script overcalls these, so worth checking">
+##ALT=<ID=DEL_INV,Description="Deletion + Inversion">
+##ALT=<ID=INS_INV,Description="Insertion + Inversion">
+##ALT=<ID=PH_SNPS,Description="Phased SNPs">
+##ALT=<ID=COMPLEX,Description="Complex variant, collection of SNPs and indels">
+##FILTER=<ID=MAPQ,Description="5prime flank maps to reference with mapping quality below 40">
+##FILTER=<ID=MISMAPPED_UNPLACEABLE,Description="Stampy mapped the variant (using the 5p-flank) confidently (mapqual> 40) to a place where the ref-allele does not match">
+##FILTER=<ID=MULTIALLELIC, Description="Cortex does not call multiallelic sites, but combining run_calls VCFs can produce them. Filtered as current genotyper assumes biallelic.">
+##FILTER=<ID=OVERLAPPING_SITE, Description="If Stampy (or combining VCFs) has placed two biallelic variants overlapping, they are filtered">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA18939
+1	887560	var_452	A	C	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=110.65	GT:COV:GT_CONF:GL	0/1:3,9:8.37:-43.31,-8.99,-17.36
+1	887560	var_453	G	C	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=110.65	GT:COV:GT_CONF:GL	0/1:3,9:8.37:-43.31,-8.99,-17.36
+1	889238	var_462	G	A	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=90.09	GT:COV:GT_CONF:GL	0/1:2,2:8.86:-11.53,-2.67,-11.53
+1	889238	var_463	T	A	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=90.09	GT:COV:GT_CONF:GL	0/1:2,2:8.86:-11.53,-2.67,-11.53
+1	892745	var_489	G	A	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=74.92	GT:COV:GT_CONF:GL	0/1:6,3:10.45:-15.80,-5.35,-29.49
+1	892745	var_490	C	A	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=74.92	GT:COV:GT_CONF:GL	0/1:6,3:10.45:-15.80,-5.35,-29.49
+1	909073	var_590	C	T	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=143.24	GT:COV:GT_CONF:GL	0/1:5,4:15.22:-20.17,-4.95,-24.72
+1	909073	var_591	A	T	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=143.24	GT:COV:GT_CONF:GL	0/1:5,4:15.22:-20.17,-4.95,-24.72
+1	948921	var_803	T	C	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=134.03	GT:COV:GT_CONF:GL	1/1:0,13:9.01:-64.60,-16.09,-7.08
+1	949654	var_804	C	G	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=141.94	GT:COV:GT_CONF:GL	1/1:0,1:0.69:-9.34,-3.87,-3.18
+1	949654	var_810	A	G	.	PASS	SVLEN=0;SVTYPE=SNP:SITE_CONF=141.94	GT:COV:GT_CONF:GL	1/1:0,1:0.69:-9.34,-3.87,-3.18

@@ -3,7 +3,7 @@ my @labels=("wild","het","hom");
 print join("\t",@labels)."\ttotal\n";
 while(<STDIN>){
 	chomp;s/\r//g;
-	my ($chr,$pos,@flags)=split(/\t/);
+	my ($chr,$pos,$ref,$alt,@flags)=split(/\t/);
 	my $hash={};
 	foreach my $flag(@flags){
 		if($flag&1){$flag="het";}

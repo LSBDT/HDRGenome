@@ -101,7 +101,7 @@ EOF
 
 perl bin/moirai2.pl -P "# Calculating positions by genomecov..." -d db -s 60 -m 1 -S bin/genomecov.pl -b '$noIndel:-d' -i 'root->$project/vcftable->$table,root->$project/case->$case,$project->genomecov#noIndel->$noIndel,$project->genomecov#stretchMode->$stretchMode,$project->genomecov#topX->$topX,$project->genomecov#regionSize->$regionSize,$project->annotation#genome->$genome,$genome->chrominfo->$chrominfo' -o '$case->$project/region->$output' command 'output=$project/genomecov/$filename' << 'EOF'
 logFile=$project/log/genomecov.$case.txt
-genomecov.pl $noIndel -o $tmpdir -m $stretchMode -t $topX -r $regionSize $table $case $chrominfo > $output 2> $logFile
+genomecov.pl $noIndel -o $tmpdir -m $stretchMode -t $topX -r $regionSize $table $chrominfo $case > $output 2> $logFile
 output=`ls $tmpdir/*.txt`
 filename=`basename $output`
 echo "INSERT $case->$project/region#log->$logFile"
@@ -189,7 +189,6 @@ output=$tmpdir/$filename
 echo "INSERT $position->$project/hdr#log->$logFile"
 EOF
 
-#AR/AD/DD
 perl bin/moirai2.pl -P "# Calculating statdel/maxStats..." -d db -s 10 -m 1 -i '$input->$project/hdr->$hdr' -o '$hdr->$project/stats->$output' -O "Results in file" command 'output=$project/stats/$filename' << 'EOF'
 basename=`basename $hdr .txt`
 logFile=$project/log/stats.${basename}.txt
@@ -199,7 +198,6 @@ filename=`basename $output`
 echo "INSERT $hdr->$project/stats#log->$logFile"
 EOF
 
-#AR/AD/DD
 perl bin/moirai2.pl -P "# Parsing statdel/maxStats and creating HTML..." -d db -s 10 -m 1 -S bin/annotation.pl -i '$project->annotation#genome->$genome,$genome->chrominfo->$chrominfo,$genome->cytoband->$cytoband,$genome->gencode->$gencode,$hdr->$project/stats->$stats' -o '$stats->$project/html->$html' command 'html=$project/html/$filename.html' << 'EOF'
 annotation.pl $stats $cytoband $gencode $chrominfo js/tablesort-min.js > $html
 filename=`basename $stats .out`

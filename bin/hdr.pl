@@ -11,7 +11,7 @@ use Time::localtime;
 my ($program_name,$program_directory,$program_suffix)=fileparse($0);
 $program_directory=Cwd::abs_path($program_directory);
 my $program_path="$program_directory/$program_name";
-my $program_version="2023/11/08";
+my $program_version="2024/06/13";
 ############################## OPTIONS ##############################
 use vars qw($opt_d $opt_e $opt_h $opt_i $opt_l $opt_o $opt_s $opt_t);
 getopts('de:hi:lo:s:t:');
@@ -446,20 +446,20 @@ sub nextTable{
   if($index>0){@positions=splice(@positions,$index);}
   if(!defined($next)){return @positions;}
   my $endReached=0;
-  my ($chr,$pos,@data)=@{$next};
+  my ($chr,$pos,$ref,$alt,@data)=@{$next};
   while(($chr cmp $chromosome)<0||($pos<$start)){
     if(eof($reader)){$endReached=1;last;}
     my $line=<$reader>;chomp($line);$line=~s/\r//g;
-    ($chr,$pos,@data)=split(/\t/,$line);
+    ($chr,$pos,$ref,$alt,@data)=split(/\t/,$line);
   }
   while(($chr eq $chromosome)&&($pos<=$end)){
-    push(@positions,[$chr,$pos,@data]);
-    if(eof($reader)){$endReached=1;last;}
-    my $line=<$reader>;chomp($line);$line=~s/\r//g;
-    ($chr,$pos,@data)=split(/\t/,$line);
+			push(@positions,[$chr,$pos,@data]);
+			if(eof($reader)){$endReached=1;last;}
+			my $line=<$reader>;chomp($line);$line=~s/\r//g;
+			($chr,$pos,$ref,$alt,@data)=split(/\t/,$line);
   }
   if($endReached){$handler->[1]=undef;}
-  else{$handler->[1]=[$chr,$pos,@data];}
+  else{$handler->[1]=[$chr,$pos,$ref,$alt,@data];}
   return @positions;
 }
 ############################## openFile ##############################
@@ -534,7 +534,10 @@ sub retrieveCtrlNamesFromTable{
   chomp($line);
   $line=~s/\r//g;
   my @names=split(/\t/,$line);
-  shift(@names);shift(@names);
+  shift(@names);#chr
+		shift(@names);#pos
+  shift(@names);#ref
+  shift(@names);#alt
   return \@names;
 }
 ############################## sortSubs ##############################
