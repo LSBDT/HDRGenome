@@ -1,2 +1,0 @@
-root	log	testDD_run_both_findrun_and_genomecov/log/vcftable.txt
-root	testDD_run_both_findrun_and_genomecov/vcftable.txt

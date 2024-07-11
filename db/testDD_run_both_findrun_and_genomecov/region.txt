@@ -1,8 +1,0 @@
-NA18939	log	testDD_run_both_findrun_and_genomecov/log/findrun.NA18939.txt
-NA18939	testDD_run_both_findrun_and_genomecov/findrun/NA18939.hom_pick1_skip0_min1000000.txt
-NA18940	log	testDD_run_both_findrun_and_genomecov/log/findrun.NA18940.txt
-NA18940	testDD_run_both_findrun_and_genomecov/findrun/NA18940.hom_pick1_skip0_min1000000.txt
-NA18941	log	testDD_run_both_findrun_and_genomecov/log/findrun.NA18941.txt
-NA18941	testDD_run_both_findrun_and_genomecov/findrun/NA18941.hom_pick1_skip0_min1000000.txt
-NA18942	log	testDD_run_both_findrun_and_genomecov/log/findrun.NA18942.txt
-NA18942	testDD_run_both_findrun_and_genomecov/findrun/NA18942.hom_pick1_skip0_min1000000.txt

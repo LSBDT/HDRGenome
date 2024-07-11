@@ -1,5 +1,0 @@
-testDD_run_both_findrun_and_genomecov	noIndel	F
-testDD_run_both_findrun_and_genomecov	pickupNumber	1
-testDD_run_both_findrun_and_genomecov	regionSize	1000000
-testDD_run_both_findrun_and_genomecov	skipCount	0
-testDD_run_both_findrun_and_genomecov	stretchMode	hom

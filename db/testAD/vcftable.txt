@@ -1,2 +1,0 @@
-root	log	testAD/log/vcftable.txt
-root	testAD/vcftable.txt

@@ -1,1 +1,0 @@
-root	testDD_run_both_findrun_and_genomecov/vcftable.bed

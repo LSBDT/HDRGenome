@@ -1,2 +1,0 @@
-hg19	annotation/hg19.gencode.bed
-hg38	annotation/hg38.gencode.bed
