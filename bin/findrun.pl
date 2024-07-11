@@ -53,9 +53,10 @@ sub help{
 }
 ############################## MAIN ##############################
 if($ARGV[0]eq"sortsubs"){sortSubs();exit();}
+elsif($ARGV[0]eq"test"){test();exit();}
 elsif(defined($opt_h)||scalar(@ARGV)<2){help();exit();}
-my $filepath=$ARGV[0];
-my @caseNames=split(/,/,$ARGV[1]);
+my @caseNames=@ARGV;
+my $filepath=shift(@caseNames);
 my $noindel=$opt_d;
 my $stretchMode=defined($opt_m)?lc($opt_m):"hom";
 my $outDir=defined($opt_o)?$opt_o:'out';
@@ -93,8 +94,7 @@ foreach my $tableFile(@tableFiles){
 		$writers=matchIndex(\@caseNames,$labels,$outDir,$stretchMode,$noindel,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
 	}
 	while(!eof($handler->[0])){
-		$regionCount+=checkRegion(nextTable($handler,$writers,$noindel),$writers,$stretchMode,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
-		$regionCount++;
+		$regionCount+=checkRegion(nextTable($handler,$writers,$minRegionSize,$noindel),$writers,$stretchMode,$pickupNumber,$minRegionSize,$maxRegionSize,$skipCount,$fullMode,$bedformat);
 		if($regionCount%10000==0){print STDERR "$regionCount...\n";}
 	}
 }
@@ -107,6 +107,26 @@ sub absolutePath{
 	my $directory=dirname($path);
 	my $filename=basename($path);
 	return Cwd::abs_path($directory)."/$filename";
+}
+############################## mkdirs ##############################
+sub mkdirs{
+	my @directories=@_;
+	foreach my $directory(@directories){
+		if(-d $directory){next;}
+		my @tokens=split(/[\/\\]/,$directory);
+		if(($tokens[0] eq "")&&(scalar(@tokens)>1)){
+			shift(@tokens);
+			my $token=shift(@tokens);
+			unshift(@tokens,"/$token");
+		}
+		my $string="";
+		foreach my $token(@tokens){
+			$string.=(($string eq "")?"":"/").$token;
+			if(-d $string){next;}
+			if(!mkdir($string)){return 0;}
+		}
+	}
+	return 1;
 }
 ############################## checkRegion ##############################
 # centromereは後の工程で省いている。途中のfindrun/HDRでは除いていない。pickupNumberを指定して行っていた
@@ -142,14 +162,15 @@ sub checkRegion{
 	my $index=0;
 	foreach my $handler(@{$writers}){
 		my $label=$handler->[0];
-		$index+=1;#=$handler->[1];
 		my $writer=$handler->[2];
 		my $lastChromosome;
 		my $lastEnd;
 		for(my $i=0;$i<$size;$i++){
+			printTable($positions->[$i]);
 			my $chromosome=$positions->[$i]->[0];
 			my $start=$positions->[$i]->[1];
-			my $flag=$positions->[$i]->[$index];
+			my $end=$positions->[$i]->[2];
+			my $flag=$positions->[$i]->[2+$index];
 			if(($flag&$startFlag)>0){#start search
 				my $string=$flag;
 				my $end=$start;
@@ -157,7 +178,7 @@ sub checkRegion{
 				my $mismatch=0;
 				for(my $j=$i+1;$j<$size;$j++){
 					my $length=$end-$start+1;
-					my $flag2=$positions->[$j]->[$index];
+					my $flag2=$positions->[$j]->[2+$index];
 					if(($flag2&$startFlag)>0){#continue search
 						$end=$positions->[$j]->[1];
 						$match++;
@@ -191,8 +212,18 @@ sub checkRegion{
 				}
 			}
 		}
+		$index+=1;
 	}
 	return $count;
+}
+############################## createFile ##############################
+sub createFile{
+	my @lines=@_;
+	my $path=shift(@lines);
+	mkdirs(dirname($path));
+	open(OUT,">$path");
+	foreach my $line(@lines){print OUT "$line\n";}
+	close(OUT);
 }
 ############################## getBasename ##############################
 sub getBasename{
@@ -307,7 +338,7 @@ sub matchIndex{
 			if(defined($bedformat)){}
 			elsif(defined($fullMode)){print $writer "#Chr\tStart\tEnd\tLength\tHit\tUnhit\tGenotype\n";}
 			else{print $writer "#Chr\tStart\tEnd\n";}
-			push(@array,[$label,$i+2,$writer]);
+			push(@array,[$label,$i,$writer]);
 	}
 	return \@array;
 }
@@ -315,6 +346,7 @@ sub matchIndex{
 sub nextTable{
 	my $handler=shift();
 	my $writers=shift();
+	my $minRegionSize=shift();
 	my $noindel=shift();
 	my @indeces=();
 	#These lines are added to reduce memory usage
@@ -327,19 +359,63 @@ sub nextTable{
 	my $position=shift(@data);
 	my @positions=([$chromosome,$position,@data]);
 	my $endReached=0;
+	my $previousPoint;
 	while(<$reader>){
 			chomp;s/\r//g;
 			my ($chr,$pos,$ref,$alt,@data)=split(/\t/);
 			my @temp=();
-			foreach my $index(@indeces){push(@temp,$data[$index-2]);}
+			foreach my $index(@indeces){push(@temp,$data[$index]);}
 			if($chr ne $chromosome){$handler->[1]=[$chr,$pos,@temp];last;}
-			if(defined($noindel)){#take care of indel
-					foreach my $d(@data){if(($d&4)>0||($d&8)>0){$d=0;}}
-			}
+			if($pos-$position>$minRegionSize){$handler->[1]=[$chr,$pos,@temp];last;}
+			if(defined($noindel)){foreach my $d(@data){if(($d&4)>0||($d&8)>0){$d=0;}}}#take care of indel
 			push(@positions,[$chr,$pos,@temp]);
+			$previousPoint=$pos;
 	}
 	if(eof($reader)){close($reader);$handler->[1]=undef;}
 	return \@positions;
+}
+############################## printTable ##############################
+sub printTable{
+	my @out=@_;
+	my $return_type=$out[0];
+	if(lc($return_type) eq "print"){$return_type=0;shift(@out);}
+	elsif(lc($return_type) eq "array"){$return_type=1;shift(@out);}
+	elsif(lc($return_type) eq "stderr"){$return_type=2;shift(@out);}
+	else{$return_type= 2;}
+	printTableSub($return_type,"",@out);
+}
+sub printTableSub{
+	my @out=@_;
+	my $return_type=shift(@out);
+	my $string=shift(@out);
+	my @output=();
+	for(@out){
+		if(ref( $_ ) eq "ARRAY"){
+			my @array=@{$_};
+			my $size=scalar(@array);
+			if($size==0){
+				if($return_type==0){print $string."[]\n";}
+				elsif($return_type==1){push(@output,$string."[]");}
+				elsif($return_type==2){print STDERR $string."[]\n";}
+			}else{
+				for(my $i=0;$i<$size;$i++){push(@output,printTableSub($return_type,$string."[$i]=>\t",$array[$i]));}
+			}
+		} elsif(ref($_)eq"HASH"){
+			my %hash=%{$_};
+			my @keys=sort{$a cmp $b}keys(%hash);
+			my $size=scalar(@keys);
+			if($size==0){
+				if($return_type==0){print $string."{}\n";}
+				elsif($return_type==1){push( @output,$string."{}");}
+				elsif($return_type==2){print STDERR $string."{}\n";}
+			}else{
+				foreach my $key(@keys){push(@output,printTableSub($return_type,$string."{$key}=>\t",$hash{$key}));}
+			}
+		}elsif($return_type==0){print "$string\"$_\"\n";}
+		elsif($return_type==1){push( @output,"$string\"$_\"");}
+		elsif($return_type==2){print STDERR "$string\"$_\"\n";}
+	}
+	return wantarray?@output:$output[0];
 }
 ############################## openFile ##############################
 sub openFile{
@@ -412,4 +488,56 @@ sub sortSubs{
 	foreach my $key(sort{$a cmp $b}@orders){foreach my $line(@{$blocks->{$key}}){print $writer "$line\n";}}
 	close($writer);
 	return system("mv $file $path");
+}
+############################## test ##############################
+sub test{
+	createFile("test/test.txt","#chromosome	position	ref	alt	NA18939	NA18940	NA18941	NA18942",
+	"chr1	1	A	C	1	1	0	0",
+	"chr1	2	T	C	2	0	0	0",
+	"chr1	3	G	A	2	0	2	0",
+	"chr1	4	G	A	2	1	1	0",
+	"chr1	4	G	T	2	0	1	0",
+	"chr1	5	A	C	2	0	0	1",
+	"chr1	6	G	A	2	0	0	1",
+	"chr1	10	G	A	2	1	0	1",
+	"chr1	11	G	A	0	1	0	0",
+	"chr1	13	G	A	0	1	0	0",
+	"chr1	14	G	A	0	1	0	0",
+	"chr1	35	G	A	0	1	0	1",
+	"chr1	36	G	A	0	1	0	0",
+	"chr1	37	G	A	0	1	0	0",
+	"chr1	38	G	A	0	1	0	0",
+	"chr1	59	G	A	0	1	0	0",
+	"chr1	60	G	A	0	1	0	1");
+}
+############################## testCommand ##############################
+sub testCommand{
+	my @values=@_;
+	my $command=shift(@values);
+	my $value2=join("\n",@values);
+	my ($writer,$file)=tempfile();
+	close($writer);
+	if(system("$command > $file")){
+		print STDERR ">$command\n";
+		print STDERR "Command failed...\n";
+		return 1;
+	}
+	my $value1=readText($file);
+	chomp($value1);
+  $value1=~s/\r//g;
+	if($value2 eq""){if($value1 eq""){return 0;}}
+	if($value1 eq $value2){return 0;}
+	print STDERR ">$command\n";
+	print STDERR "$value1\n";
+	print STDERR "$value2\n";
+}
+############################## testSub ##############################
+sub testSub{
+	my $command=shift();
+	my $value2=shift();
+	my $value1=eval($command);
+	if(equals($value1,$value2)){return 0;}
+  print STDERR ">$command\n";
+	printTable($value1);
+	printTable($value2);
 }

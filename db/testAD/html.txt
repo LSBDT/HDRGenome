@@ -1,0 +1,8 @@
+testAD/stats/NA18939.hom_pick1_skip0_min1000000_AD.out	testAD/html/NA18939.hom_pick1_skip0_min1000000_AD.html
+testAD/stats/NA18939_AD_10_50_10.out	testAD/html/NA18939_AD_10_50_10.html
+testAD/stats/NA18940.hom_pick1_skip0_min1000000_AD.out	testAD/html/NA18940.hom_pick1_skip0_min1000000_AD.html
+testAD/stats/NA18940_AD_10_50_10.out	testAD/html/NA18940_AD_10_50_10.html
+testAD/stats/NA18941.hom_pick1_skip0_min1000000_AD.out	testAD/html/NA18941.hom_pick1_skip0_min1000000_AD.html
+testAD/stats/NA18941_AD_10_50_10.out	testAD/html/NA18941_AD_10_50_10.html
+testAD/stats/NA18942.hom_pick1_skip0_min1000000_AD.out	testAD/html/NA18942.hom_pick1_skip0_min1000000_AD.html
+testAD/stats/NA18942_AD_10_50_10.out	testAD/html/NA18942_AD_10_50_10.html

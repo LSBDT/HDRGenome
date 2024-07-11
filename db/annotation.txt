@@ -1,0 +1,2 @@
+testAD	genome	hg38
+testDD_run_both_findrun_and_genomecov	genome	hg38

@@ -15,7 +15,7 @@ $project->hdr#startDistance	10
 $project->hdr#endDistance	50
 $project->hdr#interval	10
 
-#annotation setting
+#annotation settingw
 $project->annotation#genome->hg38
 hg19->cytoband	annotation/hg19.cytoband.bed
 hg38->cytoband	annotation/hg38.cytoband.bed

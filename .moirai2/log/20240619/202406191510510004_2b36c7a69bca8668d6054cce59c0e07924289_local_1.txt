@@ -1,0 +1,29 @@
+######################################## 202406191510510004_2b36c7a69bca8668d6054cce59c0e07924289_local_1 ########################################
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#case	NA18939
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#excludeIndel	F
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#excludeLowQuality	F
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#output	testDD_run_both_findrun_and_genomecov/hdr/NA18939.hom_pick1_skip0_min1000000_DD.txt
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#project	testDD_run_both_findrun_and_genomecov
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#region	testDD_run_both_findrun_and_genomecov/findrun/NA18939.hom_pick1_skip0_min1000000.txt
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#table	testDD_run_both_findrun_and_genomecov/vcftable.txt
+.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json#targetMode	DD
+https://moirai2.github.io/schema/daemon/command	.moirai2/cmd/2b36c7a69bca8668d6054cce59c0e07924289.json
+https://moirai2.github.io/schema/daemon/execid	202406191510510004_2b36c7a69bca8668d6054cce59c0e07924289_local_1
+https://moirai2.github.io/schema/daemon/execute	completed
+https://moirai2.github.io/schema/daemon/processid	mae012-no-MacBook-Air-2.local_20240619151050
+https://moirai2.github.io/schema/daemon/processtime	1
+https://moirai2.github.io/schema/daemon/rootdir	/Users/ah3q/Sites/github/HDRGenome
+https://moirai2.github.io/schema/daemon/timecompleted	1718777455
+https://moirai2.github.io/schema/daemon/timeended	1718777455
+https://moirai2.github.io/schema/daemon/timeregistered	1718777451
+https://moirai2.github.io/schema/daemon/timestarted	1718777454
+https://moirai2.github.io/schema/daemon/workdir	.moirai2/202406191510510004_2b36c7a69bca8668d6054cce59c0e07924289_local_1
+######################################## time ########################################
+registered	2024/06/19 15:10:51
+start	2024/06/19 15:10:54
+end	2024/06/19 15:10:55
+completed	2024/06/19 15:10:55
+######################################## insert ########################################
+testDD_run_both_findrun_and_genomecov/findrun/NA18939.hom_pick1_skip0_min1000000.txt	db/testDD_run_both_findrun_and_genomecov/hdr	testDD_run_both_findrun_and_genomecov/hdr/NA18939.hom_pick1_skip0_min1000000_DD.txt
+testDD_run_both_findrun_and_genomecov/findrun/NA18939.hom_pick1_skip0_min1000000.txt	db/testDD_run_both_findrun_and_genomecov/hdr#log	testDD_run_both_findrun_and_genomecov/log/hdr.NA18939.txt
+######################################## bash ########################################

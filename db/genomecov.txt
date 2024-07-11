@@ -1,0 +1,4 @@
+testDD_run_both_findrun_and_genomecov	noIndel	F
+testDD_run_both_findrun_and_genomecov	regionSize	10000
+testDD_run_both_findrun_and_genomecov	stretchMode	hom
+testDD_run_both_findrun_and_genomecov	topX	10

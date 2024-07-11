@@ -1250,7 +1250,7 @@ sub test{
 	"chr1	887560	A	C	likely_pathogenic",
 	"chr1	949654	T	C	likely_pathogenic",
 	"chr1	887560	T	CG	likely_pathogenic");
-	testCommand("perl $program_directory/vcftable.pl -q -a test/alphaMissense.tsv test/NA18943.vcf test/NA18944.vcf test/NA18945.vcf","#chromosome	position	ref	alt	NA18943	NA18944	NA18945","chr1	887560	A	C	1025	1025	0","chr1	887560	G	C	1	1	0","chr1	887560	T	CG	0	0	1033","chr1	889238	G	A	1	1	0","chr1	889238	T	A	1	1	1","chr1	892745	C	A	1	1	0","chr1	892745	G	A	1	1	1","chr1	909073	A	T	1	1	0","chr1	909073	C	T	1	1	1","chr1	948921	T	C	2	2	2","chr1	949654	A	G	2	2	0","chr1	949654	C	G	2	2	2",);
+	testCommand("perl $program_directory/vcftable.pl -q -a test/alphaMissense.tsv test/NA18943.vcf test/NA18944.vcf test/NA18945.vcf","#chromosome	position	ref	alt	NA18943	NA18944	NA18945","chr1	887560	A	C	1025	1025	0","chr1	887560	G	C	1	1	0","chr1	887560	T	CG	0	0	1033","chr1	889238	G	A	1	1	0","chr1	889238	T	A	1	1	1","chr1	892745	C	A	1	1	0","chr1	892745	G	A	1	1	1","chr1	909073	A	T	1	1	0","chr1	909073	C	T	1	1	1","chr1	948921	T	C	2	2	2","chr1	949654	A	G	2	2	0","chr1	949654	C	G	2	2	2");
 	unlink("test/NA18943.vcf");
 	unlink("test/NA18944.vcf");
 	unlink("test/NA18945.vcf");

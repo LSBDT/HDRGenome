@@ -1,0 +1,28 @@
+######################################## 202406191512110000_2a7497cfc98763d903887cc37205a87217334_local_1 ########################################
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#chrominfo	annotation/hg38.chrom.sizes
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#cytoband	annotation/hg38.cytoband.bed
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#gencode	annotation/hg38.gencode.bed
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#genome	hg38
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#hdr	testAD/hdr/NA18939.hom_pick1_skip0_min1000000_AD.txt
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#html	testAD/html/NA18939.hom_pick1_skip0_min1000000_AD.html
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#project	testAD
+.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json#stats	testAD/stats/NA18939.hom_pick1_skip0_min1000000_AD.out
+https://moirai2.github.io/schema/daemon/command	.moirai2/cmd/2a7497cfc98763d903887cc37205a87217334.json
+https://moirai2.github.io/schema/daemon/execid	202406191512110000_2a7497cfc98763d903887cc37205a87217334_local_1
+https://moirai2.github.io/schema/daemon/execute	completed
+https://moirai2.github.io/schema/daemon/processid	mae012-no-MacBook-Air-2.local_20240619151210
+https://moirai2.github.io/schema/daemon/processtime	1
+https://moirai2.github.io/schema/daemon/rootdir	/Users/ah3q/Sites/github/HDRGenome
+https://moirai2.github.io/schema/daemon/timecompleted	1718777532
+https://moirai2.github.io/schema/daemon/timeended	1718777532
+https://moirai2.github.io/schema/daemon/timeregistered	1718777531
+https://moirai2.github.io/schema/daemon/timestarted	1718777531
+https://moirai2.github.io/schema/daemon/workdir	.moirai2/202406191512110000_2a7497cfc98763d903887cc37205a87217334_local_1
+######################################## time ########################################
+registered	2024/06/19 15:12:11
+start	2024/06/19 15:12:11
+end	2024/06/19 15:12:12
+completed	2024/06/19 15:12:12
+######################################## insert ########################################
+testAD/stats/NA18939.hom_pick1_skip0_min1000000_AD.out	db/testAD/html	testAD/html/NA18939.hom_pick1_skip0_min1000000_AD.html
+######################################## bash ########################################

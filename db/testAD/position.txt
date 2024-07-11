@@ -1,0 +1,4 @@
+NA18939	testdata/position/NA18939.txt
+NA18940	testdata/position/NA18940.txt
+NA18941	testdata/position/NA18941.txt
+NA18942	testdata/position/NA18942.txt

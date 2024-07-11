@@ -1,0 +1,9 @@
+testAD	endDistance	50
+testAD	excludeIndel	F
+testAD	excludeLowQuality	F
+testAD	interval	10
+testAD	startDistance	10
+testAD	targetMode	AD
+testDD_run_both_findrun_and_genomecov	excludeIndel	F
+testDD_run_both_findrun_and_genomecov	excludeLowQuality	F
+testDD_run_both_findrun_and_genomecov	targetMode	DD

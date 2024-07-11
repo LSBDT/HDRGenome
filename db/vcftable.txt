@@ -1,0 +1,2 @@
+testAD	qvThreshold	50
+testDD_run_both_findrun_and_genomecov	qvThreshold	50
