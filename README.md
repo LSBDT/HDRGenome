@@ -4,15 +4,6 @@
 
 > High-density oligonucleotide arrays have widely been used to detect pathogenic chromosomal deletions. In addition to high-density oligonucleotide arrays, programs using whole-exome sequencing have become available for estimating copy-number variations using depth of coverage. Here, we propose a new statistical method, HDR-del, to prioritize pathogenic chromosomal deletions based on Hamming distance in exome sequencing. In vcf (variant call format) files generated from exome sequencing, hemizygous chromosomal deletion regions lack heterozygous variants and lead to apparent long runs of homozygosity (ROH). In our Hamming distance ratio (HDR)-del approach, we calculate the "difference" in heterozygous status between an affected individual and control individuals using the HDR over all candidate chromosomal deletion regions defined as ROH longer than 1Mbp. Using a suitable test statistic, which is expected to be large for a true pathogenic deletion region, we prioritize candidate chromosomal deletion regions based on this statistic. In our approach, we were able to considerably narrow down true pathogenic chromosomal deletion regions, which were confirmed by high-density oligonucleotide arrays in four mitochondrial disease patients. Our HDR-del approach represents an easy method for detecting chromosomal deletions.
 
-## Member
-- Takeya Kasukawa <takeya.kasukawa@riken.jp>
-- Akira Hasegawa <akira.hasegawa@riken.jp>	
-- Atsushi Kondo <atsushi.kondo@riken.jp>
-- Atsuko Imai <atsuko_imai_hp@yahoo.co.jp>
-- Akihiro Nakaya <nakaya@edu.k.u-tokyo.ac.jp>
-- Yasushi Okazaki <ya-okazaki@juntendo.ac.jp>
-- Kouta Nakamura <k.nakamura.fb@juntendo.ac.jp>
-
 ## Structure
 ```
 hdrgenome/
